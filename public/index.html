@@ -882,11 +882,25 @@ setInterval(() => {
                         <div class="interactive-card">
                             <h3>Diagnostic Processing Loop</h3>
                             <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">Initiate an immediate complete cluster validation sequence mapping.</p>
-                            <button class="ui-btn" onclick="executeSummaryScan()">Execute System Integrity Scan</button>
-                        </div>
-                    </div>`
-            },
-            'universal-hub': {
+      <button class="ui-btn" onclick="executeSummaryScan()">Execute System Integrity Scan</button>
+  </div>
+
+  <div class="subscription-box" style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-top: 20px; color: #333;">
+    <h3 style="margin-top: 0;">Subscribe to Platform Updates</h3>
+    <p style="color: #666; font-size: 14px;">Get real-time notices about new nodes, updates, and upcoming premium features.</p>
+    <div style="display: flex; gap: 10px;">
+      <input type="email" id="subscriberEmail" placeholder="Enter your email" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" />
+      <button onclick="handleSubscription()" style="background: #0070f3; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        Subscribe
+      </button>
+    </div>
+    <p id="subscriptionMessage" style="margin-top: 10px; font-size: 13px; display: none;"></p>
+  </div>
+
+</div>
+</div>`,
+},
+'universal-hub': {
                 title: 'Universal Hub Orchestration Node',
                 subtitle: 'Core Layer | Cluster Matrix Router',
                 headline: 'Tracking Node Platform Cluster Matrix #45 Direct Stream Pipeline Context Routing.',

@@ -511,3 +511,35 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
 
     console.log("[System Sync] Core infrastructure channels cleanly generated and ready.");
 })();
+
+async function handleSubscription() {
+  const emailInput = document.getElementById('subscriberEmail');
+  const messageText = document.getElementById('subscriptionMessage');
+  const email = emailInput.value.trim();
+
+  if(!email) return;
+
+  try {
+    const response = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await response.json();
+    messageText.style.display = 'block';
+
+    if (response.ok) {
+      messageText.style.color = 'green';
+      messageText.innerText = result.message;
+      emailInput.value = ''; // Clears the input box on success
+    } else {
+      messageText.style.color = 'red';
+      messageText.innerText = result.error;
+    }
+  } catch (error) {
+    messageText.style.display = 'block';
+    messageText.style.color = 'red';
+    messageText.innerText = 'Network error. Please try again.';
+  }
+}
