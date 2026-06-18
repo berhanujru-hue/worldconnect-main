@@ -1,0 +1,71 @@
+require('dotenv').config();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const express = require("express");
+const { createClient } = require("@supabase/supabase-js");
+
+const app = express();
+const port = 3000;
+
+// Initialize Supabase - Using 'SUPABASE_KEY' from your .env
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+
+app.use(express.json());
+app.use(express.static('public'));
+
+// --- FEED ROUTE: Fetch posts from Supabase ---
+app.get('/api/feed', async (req, res) => {
+    try {
+        console.log("Attempting to fetch feed...");
+        const { data, error } = await supabase
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Supabase Error:", error.message);
+            return res.status(500).json({ error: error.message });
+        }
+        res.status(200).json(data);
+    } catch (err) {
+        res.status(500).json({ error: "Server crash" });
+    }
+});
+
+// --- POST ROUTE: Save new post to Supabase ---
+app.post('/api/posts', async (req, res) => {
+    const { author, content } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('posts')
+            .insert([{ author, content }]);
+        if (error) throw error;
+        res.status(200).json({ status: "Success" });
+    } catch (err) {
+        console.error("Insert Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- OTHER ROUTES ---
+app.get('/admin-api/stats', (req, res) => {
+    res.json({ userName: "Admin", usersOnline: "1,402", encryptionStatus: "AES-256", status: "ACTIVE" });
+});
+
+app.post('/chat', async (req, res) => {
+    try {
+        const { targetLang } = req.body;
+        const prompt = `Generate a news update in ${targetLang || 'Amharic'}. Use Ge'ez script.`;
+        const result = await model.generateContent(prompt);
+        res.json({ text: result.response.text() });
+    } catch (err) {
+        res.status(500).json({ error: "AI Error" });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`🚀 WorldConnect running at http://localhost:${port}`);
+});

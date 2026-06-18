@@ -1,0 +1,8 @@
+/public
+  ├── index.html
+  └── /js
+      ├── engine.js        (The Translation & Core Logic)
+      └── /nodes
+          ├── system.js    (Admins, Language, Profile)
+          ├── intel.js     (Summary, AI Assistant)
+          └── comms.js     (Messenger, Calls)
