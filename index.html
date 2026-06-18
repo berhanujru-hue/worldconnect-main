@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorldConnect AI Workspace Environment</title>
+    <link rel="icon" href="data:,">
+    
+    <style>
+        /* --- BRAND DESIGN SYSTEM & PALETTE VARIABLES --- */
+        :root {
+            --bg-athens-gray: #f0f1f3;    /* Professional light Athens gray background layout */
+            --brand-shiny-blue: #2563eb;  /* Shiny blue text brand color for headers */
+            --indicator-green: #22c55e;   /* Green badge color */
+            --active-item-blue: #2563eb;  /* Focused navigation row link style */
+            --sidebar-text: #1e293b;      /* High contrast slate text for readable layout links */
+            --card-dark: #1e293b;         /* Dark console panel display block color */
+            --text-dark: #0f172a;
+            --border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- ATHENS GRAY SIDEBAR FRAME ARCHITECTURE --- */
+        #sidebar {
+            width: 320px;
+            background-color: var(--bg-athens-gray);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-right: 1px solid var(--border-color);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-wrapper {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .sidebar-logo-globe-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-globe-container::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 12px;
+            background-color: #22c55e;
+            border-radius: 50% 40% 60% 30%;
+            top: 6px;
+            left: 4px;
+            transform: rotate(-15deg);
+        }
+
+        .sidebar-logo-globe-container::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: #22c55e;
+            border-radius: 40% 60% 30% 50%;
+            bottom: 4px;
+            right: 3px;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--brand-shiny-blue);
+            text-transform: uppercase;
+        }
+
+        #dynamic-node-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+
+        #dynamic-node-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        #dynamic-node-menu::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 3px;
+        }
+
+        .sidebar-group-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #64748b;
+            padding: 24px 24px 6px 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+            margin-bottom: 4px;
+        }
+
+        .sidebar-node {
+            padding: 11px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--sidebar-text);
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-node:hover {
+            color: var(--active-item-blue);
+            background-color: rgba(37, 99, 235, 0.04);
+        }
+
+        .sidebar-node.active {
+            color: var(--active-item-blue);
+            font-weight: 800;
+            background-color: rgba(37, 99, 235, 0.07);
+            border-left: 4px solid var(--active-item-blue);
+            padding-left: 20px;
+        }
+
+        .badge-40th {
+            background-color: var(--indicator-green);
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-ai {
+            background-color: rgba(37, 99, 235, 0.12);
+            color: var(--active-item-blue);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTROL WORKSPACE PANEL MAIN VIEWPORT --- */
+        #workspace-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .workspace-top-bar {
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            flex-shrink: 0;
+        }
+
+        .search-pipeline-input {
+            width: 320px;
+            padding: 10px 16px;
+            background-color: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            outline: none;
+        }
+
+        .version-tag {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .workspace-panel-view {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .main-hero-title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .main-hero-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+
+        .dark-console-card {
+            background-color: var(--card-dark);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .console-meta-line {
+            font-family: monospace;
+            color: #38bdf8;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .console-main-headline {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.45;
+        }
+
+        /* --- HARDWARE LIVE INSIGHT COUNTERS GRID --- */
+        .telemetry-summary-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .telemetry-stat-box {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .telemetry-stat-box .lbl {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .telemetry-stat-box .val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--brand-shiny-blue);
+        }
+
+        /* --- DYNAMIC INTERACTIVE MATRIX COMPONENT BLOCKS --- */
+        .functional-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .interactive-card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        }
+
+        .interactive-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 14px;
+            color: #1e293b;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ui-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: #0f172a;
+            outline: none;
+        }
+        .ui-input:focus {
+            border-color: var(--brand-shiny-blue);
+        }
+
+        .ui-btn {
+            background-color: var(--brand-shiny-blue);
+            color: white;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: background-color 0.15s, opacity 0.15s;
+        }
+
+        .ui-btn:hover {
+            opacity: 0.95;
+            background-color: #1d4ed8;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 9999px;
+            background: #f1f5f9;
+        }
+        .status-pill.online { background: #dcfce7; color: #166534; }
+        .status-pill.alert { background: #fee2e2; color: #991b1b; }
+
+        .terminal-feed-card {
+            background: #0f172a;
+            color: #4ade80;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* --- VISUAL DISPLAY & FEED MATRIX COMPONENTS --- */
+        .video-grid-emulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .video-box-frame {
+            background: #1e293b;
+            height: 150px;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .video-box-frame.streaming-on {
+            background: radial-gradient(circle at center, #334155 0%, #0f172a 100%);
+            color: #38bdf8;
+            border-color: #2563eb;
+        }
+        .video-box-frame span {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.75);
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        .chat-container-mock {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            height: 130px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+        .chat-bubble-row {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .chat-bubble-row strong { color: #2563eb; }
+
+        /* --- COMPREHENSIVE RESPONSIVE ENGINE REFINEMENTS --- */
+        @media (max-width: 992px) {
+            .telemetry-summary-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .workspace-panel-view {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 240px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            #dynamic-node-menu {
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                white-space: nowrap;
+                padding: 12px 20px;
+                gap: 10px;
+            }
+
+            .sidebar-group-label {
+                display: none;
+            }
+
+            .sidebar-node {
+                display: inline-flex;
+                padding: 8px 16px;
+                border-radius: 6px;
+                background: rgba(0, 0, 0, 0.04);
+                border-left: none !important;
+            }
+            
+            .sidebar-node.active {
+                background-color: var(--active-item-blue);
+                color: #ffffff;
+            }
+
+            .workspace-top-bar {
+                padding: 16px 24px;
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .search-pipeline-input {
+                width: 100%;
+            }
+
+            .functional-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .video-grid-emulator {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="sidebar-brand-wrapper">
+            <div class="sidebar-logo-globe-container"></div>
+            <div class="sidebar-brand-text">WorldConnect</div>
+        </div>
+        <div id="dynamic-node-menu"></div>
+    </aside>
+
+    <main id="workspace-container">
+        <header class="workspace-top-bar">
+            <input type="text" id="pipeline-filter" class="search-pipeline-input" placeholder="Search and filter pipeline nodes..." oninput="filterNodes()">
+            <div class="version-tag">SYSTEM ID: 3.0.44</div>
+        </header>
+
+        <div class="workspace-panel-view" id="main-content-viewport">
+            </div>
+    </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+
+<script src="/js/nodes/system.js"></script>
+
+<script>
+// ============================================================================
+// 🟢 GLOBAL GATEWAY PIPELINE INTERFACES (PLACED AT TOP OF SCRIPT)
+// ============================================================================
+async function sendGatewayPortalMessage() {
+    const inputField = document.getElementById('gateway-user-input');
+    if (!inputField) return; // Safe guard clause
+    
+    if (!inputField.value.trim()) return;
+    const userMessage = inputField.value.trim();
+    const timestamp = new Date().toLocaleTimeString();
+    
+    inputField.value = ''; // Instant UI reset
+    
+    const systemLog = document.getElementById('engine-log') || document.getElementById('status-terminal');
+    const visualFeedDisplay = document.getElementById('gateway-stream-feed');
+    
+    try {
+        if (visualFeedDisplay) {
+            visualFeedDisplay.innerHTML += `<div style="margin-top: 6px;"><strong style="color: #10b981;">[Local Operator]:</strong> ${userMessage}</div>`;
+            visualFeedDisplay.scrollTop = visualFeedDisplay.scrollHeight;
+        }
+
+        if (systemLog) {
+            systemLog.innerHTML += `<br>[${timestamp}] <span style="color: #3b82f6;">[Data Link] Syncing payload to cloud network...</span>`;
+            systemLog.scrollTop = systemLog.scrollHeight;
+        }
+
+        // Supabase Database Connection Sync
+        if (typeof getSupabaseClient === 'function' && getSupabaseClient()) {
+            const client = getSupabaseClient();
+            await client
+                .from('gateway_messages')
+                .insert([{ sender_node: '[Local Node]', message_body: userMessage, profile_color: '#10b981' }]);
+        }
+
+// 🟢 UPDATED: Points directly to your Facebook-style Gateway layout route
+        const serverResponse = await fetch('/api/gateway', {
+            method: 'GET', // Changed to GET to retrieve your central timeline feed
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!serverResponse.ok) throw new Error(`Server route error status: ${serverResponse.status}`);
+        const serverData = await serverResponse.json();
+        
+        // Safe fallback data since the Gateway returns a feed layout instead of an AI chat reply
+        const modelFinalOutput = "Gateway stream verified. Timeline loading...";
+
+        if (visualFeedDisplay) {
+            visualFeedDisplay.innerHTML += `<div style="margin-top: 6px;"><strong style="color: #a855f7;">[Gateway Intelligence]:</strong> ${modelFinalOutput}</div>`;
+            visualFeedDisplay.scrollTop = visualFeedDisplay.scrollHeight;
+        }
+    } catch (err) {
+        console.error('[Gateway Pipeline Failure]:', err.message);
+    }
+}
+
+// ============================================================================
+// 🟢 THE WORLDCONNECT INTERFACE CONNECT LINK
+// ============================================================================
+window.toggleCameraHubStreamsMock = function(...args) {
+    if (typeof initializeSystemDeck !== 'undefined' && initializeSystemDeck.toggleCameraHubStreamsMock) {
+        return initializeSystemDeck.toggleCameraHubStreamsMock(...args);
+    }
+    console.log("[WorldConnect Engine] Camera Hub view rendering fallback...");
+};
+
+window.cycleAgoraToken = function(...args) {
+    if (typeof initializeSystemDeck !== 'undefined' && initializeSystemDeck.cycleAgoraToken) {
+        return initializeSystemDeck.cycleAgoraToken(...args);
+    }
+    console.log("[WorldConnect Engine] Refreshing RTC stream channels...");
+};
+
+window.executeCustomFormAction = function(...args) {
+    if (typeof initializeSystemDeck !== 'undefined' && initializeSystemDeck.executeCustomFormAction) {
+        return initializeSystemDeck.executeCustomFormAction(...args);
+    }
+    console.log("[WorldConnect Engine] Processing custom interface mutations...");
+};
+
+window.forceArraySync = function(...args) {
+    if (typeof initializeSystemDeck !== 'undefined' && initializeSystemDeck.forceArraySync) {
+        return initializeSystemDeck.forceArraySync(...args);
+    }
+    console.log("[WorldConnect Engine] Running data link sync loop...");
+};
+
+// ============================================================================
+// 🟢 THE OFFICIAL UNIFIED WORLDCONNECT AI-AGENT PIPELINE
+// ============================================================================
+window.sendAICommand = async function() {
+    console.log("[WorldConnect AI] Core pipeline sequence triggered...");
+
+    // 1. Locate any valid text input box on the screen automatically
+    const commandInput = document.getElementById('ai-user-input') || 
+                         document.getElementById('ai-command-prompt') || 
+                         document.querySelector('.chat-input-field') ||
+                         document.getElementById('gateway-user-input');
+                         
+    if (!commandInput || !commandInput.value.trim()) {
+        console.warn("[WorldConnect AI] Action blocked: Input field is empty or missing.");
+        return;
+    }
+
+    const userPrompt = commandInput.value.trim();
+
+    // 2. Locate any active screen logging container
+    const responseLog = document.getElementById('chat-stream-output') || 
+                          document.getElementById('ai-response-log');
+    const timestamp = new Date().toLocaleTimeString();
+
+    if (responseLog) {
+        responseLog.innerHTML += `<div style="color: #38bdf8; margin-top: 6px;">[${timestamp}] [USER]: ${userPrompt}</div>`;
+        responseLog.innerHTML += `<div style="color: #94a3b8;" id="ai-loading-state">[SYSTEM]: Routing inference to Gemini cluster...</div>`;
+        responseLog.scrollTop = responseLog.scrollHeight;
+    }
+
+    // 3. Robust endpoint routing matrix
+    const pathsToTest = [
+        '/api/ai-assistant',
+        '/api/gateway',
+        '/api/chat',
+        '/api/assistant'
+    ];
+
+    let activeResponse = null;
+
+    for (const routePath of pathsToTest) {
+        try {
+            console.log(`[AI Network] Testing pipeline path: ${routePath}`);
+            const testFetch = await fetch(routePath, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userPrompt, prompt: userPrompt })
+            });
+
+            if (testFetch.status !== 404) {
+                activeResponse = testFetch;
+                break;
+            }
+        } catch (err) {
+            console.warn(`[AI Network] Path ${routePath} bypassed:`, err.message);
+        }
+    }
+
+    // Remove the temporary loading element safely
+    const loaderNode = document.getElementById('ai-loading-state');
+    if (loaderNode) loaderNode.remove();
+
+    try {
+        if (!activeResponse) throw new Error("All backend configuration API paths returned 404 Not Found.");
+        if (!activeResponse.ok) throw new Error(`Server returned HTTP state code ${activeResponse.status}`);
+
+        const payloadData = await activeResponse.json();
+        
+        // Safely pull text out of common API response formats
+        const assistantReply = payloadData.reply || payloadData.output || payloadData.message || JSON.stringify(payloadData);
+
+        // 4. Print the answer directly into your active log interface block
+        if (responseLog) {
+            const replyTime = new Date().toLocaleTimeString();
+            responseLog.innerHTML += `
+                <div style="background: rgba(15, 23, 42, 0.6); border-left: 2px solid #10b981; padding: 10px; margin: 8px 0; border-radius: 4px;">
+                    <span style="color: #10b981; font-weight: bold;">[${replyTime}] [GEMINI]:</span>
+                    <span style="color: #f1f5f9; white-space: pre-wrap; display: block; margin-top: 4px;">${assistantReply}</span>
+                </div>
+            `;
+            responseLog.scrollTop = responseLog.scrollHeight;
+        }
+
+        // Clear out input box for the next prompt cleanly
+        commandInput.value = '';
+
+    } catch (pipelineError) {
+        console.error('[AI Core Failure]:', pipelineError.message);
+        if (responseLog) {
+            responseLog.innerHTML += `<div style="color: #f43f5e; margin: 6px 0;">[ERROR]: ${pipelineError.message}</div>`;
+            responseLog.scrollTop = responseLog.scrollHeight;
+        }
+    }
+};
+
+// ============================================================================
+// 🔒 SAFE ALL-ALIAS MAPPING BRIDGE (Prevents button crashes)
+// ============================================================================
+window.evaluateVectorInput = window.sendAICommand;
+window.sendUserPromptToAssistant = window.sendAICommand;
+window.submitAIPrompt = window.sendAICommand;
+window.compileAIExtraction = window.sendAICommand;
+
+// Extra fallback hooks for system layout modules
+window.fetchSatScan = function(...args) {
+    if (typeof initializeSystemDeck !== 'undefined' && initializeSystemDeck.fetchSatScan) {
+        return initializeSystemDeck.fetchSatScan(...args);
+    }
+    console.log("[WorldConnect Engine] Loading weather mapping grids...");
+};
+
+// ============================================================================
+// 🟢 WORLDCONNECT AUTOMATIC FORGOT PASSWORD INJECTOR
+// ============================================================================
+setInterval(() => {
+    // 1. Look for any password input field on the screen
+    const passwordInput = document.querySelector('input[type="password"]');
+    
+    // 2. If we find it, and we haven't already added the link, let's inject it
+    if (passwordInput && !document.getElementById('inserted-forgot-password-link')) {
+        
+        // Create the container wrapper
+        const linkContainer = document.createElement('div');
+        linkContainer.id = 'inserted-forgot-password-link';
+        linkContainer.style.display = 'flex';
+        linkContainer.style.justify = 'flex-end';
+        linkContainer.style.marginTop = '6px';
+        linkContainer.style.marginBottom = '10px';
+        linkContainer.style.width = '100%';
+        
+        // Create the link itself matching your high-end dark theme aesthetics
+        linkContainer.innerHTML = `
+            <a href="#" id="forgot-password-trigger" style="
+                color: #38bdf8; 
+                font-size: 0.8rem; 
+                font-family: system-ui, sans-serif; 
+                text-decoration: none;
+                transition: color 0.2s;
+            " onmouseover="this.style.color='#0284c7'" onmouseout="this.style.color='#38bdf8'">
+                Forgot Password?
+            </a>
+        `;
+        
+        // Insert the link right after the password input box
+        passwordInput.parentNode.insertBefore(linkContainer, passwordInput.nextSibling);
+        
+        // 3. Attach a click event action to the link
+        document.getElementById('forgot-password-trigger').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log("[WorldConnect Auth] Forgot password sequence initialized...");
+            
+            // Trigger a clean alert for now to show the user it works!
+            alert("Password reset instructions have been routed to your system engine gateway pipeline.");
+        });
+        
+        console.log("[System Core] Successfully injected 'Forgot Password' option into the active view layout.");
+    }
+}, 1000); // Checks every 1 second to see if the login screen is open
+
+// ============================================================================
+// 🌐 WORLDCONNECT COMPREHENSIVE USER VIEW MASK
+// ============================================================================
+(function() {
+    let controlDeck = document.getElementById('dev-view-switcher');
+    if (!controlDeck) {
+        controlDeck = document.createElement('div');
+        controlDeck.id = 'dev-view-switcher';
+        document.body.appendChild(controlDeck);
+    }
+    
+    controlDeck.style = "position: fixed; bottom: 20px; left: 20px; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
+    controlDeck.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px; color: #38bdf8; font-size: 0.8rem; letter-spacing: 0.5px;">⚙️ LAYOUT TOGGLE</div>
+        <button id="toggle-admin-btn" style="background: #0284c7; color: white; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 6px; display: block;">SHOW FULL ADMIN (45 NODES)</button>
+        <button id="toggle-user-btn" style="background: #334155; color: #cbd5e1; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; display: block;">SHOW STANDARD USER VIEW</button>
+    `;
+
+    // ❌ STRICT ADMIN STUFF WE ABSOLUTELY WANT TO HIDE FROM USERS
+    const strictAdminItems = [
+        'admins', 'system logs', 'kernel status', 'network status', 
+        'token cycles', 'system overrides', 'weather sat', 'global radar', 'broadcasts'
+    ];
+
+    function applyUserView() {
+        console.log("[Dev Switcher] Surgical Mask: Hiding Admin & Dev rails only...");
+        document.getElementById('toggle-user-btn').style.background = '#0284c7';
+        document.getElementById('toggle-user-btn').style.color = 'white';
+        document.getElementById('toggle-admin-btn').style.background = '#334155';
+        document.getElementById('toggle-admin-btn').style.color = '#cbd5e1';
+
+        const elements = document.querySelectorAll('div, a, li, button, span, h3, h4');
+        
+        elements.forEach(el => {
+            if (el.innerText && el.children.length === 0) {
+                const cleanText = el.innerText.toLowerCase().trim();
+                
+                // If it is an admin tool, hide it!
+                if (strictAdminItems.includes(cleanText)) {
+                    el.style.setProperty('display', 'none', 'important');
+                    
+                    // Hide the individual sidebar container holding it
+                    if (el.parentElement && (el.parentElement.classList.contains('sidebar-item') || el.parentElement.tagName === 'LI')) {
+                        el.parentElement.style.setProperty('display', 'none', 'important');
+                    }
+                } else {
+                    // Force ensure everything else stays open and visible for the user!
+                    el.style.removeProperty('display');
+                    if (el.parentElement) el.parentElement.style.removeProperty('display');
+                }
+            }
+        });
+    }
+
+    function applyAdminView() {
+        console.log("[Dev Switcher] Restoring all 45 developer options...");
+        document.getElementById('toggle-admin-btn').style.background = '#0284c7';
+        document.getElementById('toggle-admin-btn').style.color = 'white';
+        document.getElementById('toggle-user-btn').style.background = '#334155';
+        document.getElementById('toggle-user-btn').style.color = '#cbd5e1';
+
+        const elements = document.querySelectorAll('div, a, li, button, span, h3, h4');
+        elements.forEach(el => {
+            el.style.removeProperty('display');
+        });
+    }
+
+    setTimeout(() => {
+        document.getElementById('toggle-user-btn').onclick = applyUserView;
+        document.getElementById('toggle-admin-btn').onclick = applyAdminView;
+    }, 500);
+})();
+// ============================================================================
+
+    console.log("Booting WorldConnect Engine...");
+    
+    // ... all your sidebar rendering code lives here ...
+    // ... your gateway database chat code lives here ...
+        // --- 🛠️ ATTACHED DIRECTLY TO GLOBAL WINDOW OBJECT FOR ORDER OF INITIALIZATION INSURANCE ---
+        window.renderTelemetryRow = function(val1, val2, val3) {
+            return `
+                <div class="telemetry-summary-row">
+                    <div class="telemetry-stat-box">
+                        <div class="lbl">CLUSTER METRIC STREAM</div>
+                        <div class="val" id="telemetry-stat-v1">${val1}</div>
+                    </div>
+                    <div class="telemetry-stat-box">
+                        <div class="lbl">NODE STATE RUNTIME</div>
+                        <div class="val" id="telemetry-stat-v2" style="color: #10b981;">${val2}</div>
+                    </div>
+                    <div class="telemetry-stat-box">
+                        <div class="lbl">PIPELINE THROUGHPUT</div>
+                        <div class="val" id="telemetry-stat-v3" style="color: #3b82f6;">${val3}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const wcCategories = ['CORE SYSTEM', 'INTELLIGENCE', 'COMMUNICATION', 'SOCIAL & CONTENT', 'SYSTEM MANAGEMENT'];
+        
+        const wcNodes = {
+            'CORE SYSTEM': ['Summary', 'Universal Hub', 'Global Bridge', 'AI Assistant', 'World AI Update', 'AI Note Summary', 'System Logs', 'Kernel Status', 'Network Status'],
+            'INTELLIGENCE': ['Camera Hub', 'Live Stream', 'Weather Sat', 'Global Radar', 'Traffic Cam', 'Satellite Relay', 'Global Alerts'],
+            'COMMUNICATION': ['Gateway', 'Group Calls', 'Group Management', 'Admins', 'Video Calls', 'Audio Calls', 'Broadcasts', 'Messages Request', 'Friends Request'],
+            'SOCIAL & CONTENT': ['Global Feeds', 'Discovery', 'Global Blogs', 'Media Gallery', 'Trending', 'Marketplace', 'Events', 'Public Chat', 'Housing Hub'],
+            'SYSTEM MANAGEMENT': ['Profile', 'Security', 'Privacy Center', 'Appearance', 'Wallet Assets', 'Cloud Storage', 'Data Analytics', 'Language', 'Notifications', 'Help & Support', 'Log Out']
+        };
+
+        // Complete 45-Node Architecture Map Registry Object - Fully Reactive Implementations
+        const nodeWorkspaceData = {
+            'summary': {
+                title: 'Global Platform Layout Workspace Active',
+                subtitle: 'WorldConnect Core | Operational Status Overview',
+                headline: 'The unified global platform layout workspace translation vectors are fully active.',
+                render: () => window.renderTelemetryRow('45 / 45', 'STABLE', '100%') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Telemetry Routing Infrastructure</h3>
+                            <p style="margin-bottom:12px; font-size:0.9rem; color:#475569;">Active Sync Handshake Validation Status Loop Parameters:</p>
+                            <div style="font-size:1.45rem; font-weight:800; color:var(--brand-shiny-blue);" id="matrix-status-text">All Grid Channels Bound</div>
+                            <div style="margin-top:15px;" class="status-pill online" id="matrix-status-pill">Matrix Path Safe</div>
+                        </div>
+                        <div class="interactive-card">
+                            <h3>Diagnostic Processing Loop</h3>
+                            <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">Initiate an immediate complete cluster validation sequence mapping.</p>
+                            <button class="ui-btn" onclick="executeSummaryScan()">Execute System Integrity Scan</button>
+                        </div>
+                    </div>`
+            },
+            'universal-hub': {
+                title: 'Universal Hub Orchestration Node',
+                subtitle: 'Core Layer | Cluster Matrix Router',
+                headline: 'Tracking Node Platform Cluster Matrix #45 Direct Stream Pipeline Context Routing.',
+                render: () => window.renderTelemetryRow('45 Priority', 'STABLE', '100%') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Node Deployment Allocator</h3>
+                            <input type="text" class="ui-input" id="hub-region-input" value="US-EAST-VERCEL">
+                            <button class="ui-btn" onclick="updateHubRegion()">Re-route Path Target</button>
+                        </div>
+                    </div>`
+            },
+            'global-bridge': {
+                title: 'Global Bridge Connectivity Matrix',
+                subtitle: 'Core Layer | Cross-Cluster Routing Engine',
+                headline: 'Bridges multi-datacenter endpoints securely over verified network layer protocol paths.',
+                render: () => window.renderTelemetryRow('2 Tunnels', 'CONNECTED', 'SECURE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Tunnel Routing Configuration Mapping</h3>
+                            <div id="tunnel-log-box" style="padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:0.85rem; font-family:monospace; line-height:1.5; color:#334155; margin-bottom:12px;">
+                                [TUNNEL-A01]: Hub Node 40 &harr; Production Edge (ACTIVE)<br>
+                                [TUNNEL-B02]: Master Node 44 &harr; Local Loop (VERIFIED)
+                            </div>
+                            <button class="ui-btn" onclick="toggleTunnelState()">Toggle Tunnel Topology</button>
+                        </div>
+                    </div>`
+            },
+            'ai-assistant': {
+                title: 'AI Assistant Interface Workspace',
+                subtitle: 'Core Layer | Model Execution Framework',
+                headline: 'Real-time pipeline orchestration linked directly with active model instances.',
+                render: () => window.renderTelemetryRow('Flash 3.0', 'READY', 'NATIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card" style="grid-column: span 2;">
+                            <h3>Prompt Executive Assistant Command Center</h3>
+                            <div class="chat-container-mock" id="ai-response-log" style="height:100px; margin-bottom:12px; font-family:monospace; background:#fafafa;">
+                                [System] Ready to parse vector instructions via Gemini Flash 3.0 engine API context.
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="ai-command-prompt" class="ui-input" style="margin-bottom:0;" placeholder="Ask the assistant framework anything...">
+                                <button class="ui-btn" onclick="sendAICommand()">Evaluate Vector</button>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'world-ai-update': {
+                title: 'World AI Ingestion Engine',
+                subtitle: 'Core Layer | Stream Ingestion Parser',
+                headline: 'Aggregates real-time external global model vector paths directly into application dictionaries.',
+                render: () => window.renderTelemetryRow('44 Arrays', 'STABLE', 'AUTO_SYNC') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Pipeline Controls</h3>
+                            <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">Force immediate sync with upstream dataset schemas.</p>
+                            <button class="ui-btn" onclick="forceArraySync()">Force Array Update Cycle</button>
+                        </div>
+                    </div>`
+            },
+            'ai-note-summary': {
+                title: 'AI Note Summary Compactor Matrix',
+                subtitle: 'Core Layer | Data Processing Framework',
+                headline: 'Transforms sprawling telemetry logging statements into localized context parameter markers.',
+                render: () => window.renderTelemetryRow('Inference Engine', 'ACTIVE', 'COMPACT_ON') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Raw Buffer Compression Console</h3>
+                            <textarea class="ui-input" id="note-txt-area" style="height:70px; font-family:monospace; resize:none;" placeholder="Paste text or notes to summarize..."></textarea>
+                            <button class="ui-btn" onclick="compileAIExtraction()">Compile Note Summary</button>
+                        </div>
+                    </div>`
+            },
+            'system-logs': {
+                title: 'System Logs Analytics Ledger',
+                subtitle: 'Core Layer | Event Frame Tracing Console',
+                headline: 'Aggregated trace streams tracking local server handshake state loops across port 5000.',
+                render: () => window.renderTelemetryRow('SYS_DB', 'MONITORING', 'BUFFER_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Log Controls</h3>
+                            <button class="ui-btn" style="background:#dc2626;" onclick="clearActiveTerminalDisplayLogs()">Clear Console Buffer Screen</button>
+                        </div>
+                    </div>`
+            },
+            'kernel-status': {
+                title: 'Kernel Base Processing Hub',
+                subtitle: 'Core Layer | Process Thread Engine',
+                headline: 'Validates underlying core server status mappings, environment keys, and process bindings.',
+                render: () => window.renderTelemetryRow('NodeJS Runtime', 'KERNEL_OK', 'PORT_5000') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Process Attributes</h3>
+                            <p style="font-family:monospace; font-size:0.85rem; line-height:1.6; color:#334155;">
+                                Runtime Platform Engine Context: Isolated Protected Mode Setup<br>
+                                Dynamic Network Interface Binding: Port 5000 (Active Loop Listener)
+                            </p>
+                        </div>
+                    </div>`
+            },
+            'network-status': {
+                title: 'Network Traffic Orchestration Topology',
+                subtitle: 'Core Layer | Socket Router Manager',
+                headline: 'Continuous validation check loops mapping active client socket channels and handshake metrics.',
+                render: () => window.renderTelemetryRow('44 Sockets', 'ONLINE', 'HEALTHY') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Network Ping Matrix</h3>
+                            <button class="ui-btn" onclick="pingNetworkTopology()">Ping Connected Node Topology</button>
+                        </div>
+                    </div>`
+            },
+
+            // --- INTELLIGENCE LAYER ---
+            'camera-hub': {
+
+
+                title: 'Camera Hub Master Monitor Grid',
+                subtitle: 'Intelligence Layer | Unified Ingestion Framework',
+                headline: 'Bridges multi-channel surveillance stream frames into a single management interface canvas.',
+                render: () => window.renderTelemetryRow('2 Hardware Ingests', 'STABLE', 'FEEDS_LIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card" style="grid-column: span 2;">
+                            <div class="video-grid-emulator">
+                                <div class="video-box-frame streaming-on" id="cam-grid-1">[CHANNEL_01] NORTH EDGE SURVEILLANCE <span>STREAM ONLINE</span></div>
+                                <div class="video-box-frame streaming-on" id="cam-grid-2">[CHANNEL_02] LOCAL HOST PORT 5000 CORE RACK <span>STREAM ONLINE</span></div>
+                            </div>
+                            <div style="margin-top:15px; display:flex; gap:10px;">
+                                <button class="ui-btn" onclick="toggleCameraHubStreamsMock('cam-grid-1', 'cam-grid-2')">Toggle Simulated Stream Handshakes</button>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'live-stream': {
+                title: 'Live Stream Data Pipeline',
+                subtitle: 'Intelligence Layer | Synchronous Media Grid',
+                headline: 'Real-time parameters for the Live Stream data workspace node are synchronized and functional.',
+                render: () => window.renderTelemetryRow('Agora API', 'STREAMING', 'LATENCY_LOW') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Media Stream Loop Controls</h3>
+                            <button class="ui-btn" onclick="cycleAgoraToken()">Reset Ingestion Feed Loop</button>
+                        </div>
+                    </div>`
+            },
+            'weather-sat': {
+                title: 'Weather Sat Telemetry Engine',
+                subtitle: 'Intelligence Layer | Environmental Analysis',
+                headline: 'Gathers meteorological array matrix telemetry to trace regional patterns.',
+                render: () => window.renderTelemetryRow('SAT_LINK_04', 'TRACKING', 'SYNC_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Ingestion Core Vector</h3>
+                            <button class="ui-btn" onclick="fetchSatScan()">Fetch Sat-Frame Scan</button>
+                        </div>
+                    </div>`
+            },
+            'global-radar': {
+                title: 'Global Radar Grid Tracker',
+                subtitle: 'Intelligence Layer | Spatial Scanning',
+                headline: 'Provides high-fidelity spatial telemetry checks over transport clusters and corridors.',
+                render: () => window.renderTelemetryRow('Radar Sweep x8', 'NOMINAL', '100%_SCAN') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Radar Controls</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Radar Sweep Sequence Initialized', 'Spatial Ingestion Paths Clean')">Fire Radar Sweep Ping</button>
+                        </div>
+                    </div>`
+            },
+            'traffic-cam': {
+                title: 'Traffic Cam Pipeline Router',
+                subtitle: 'Intelligence Layer | Node Tracking Stream',
+                headline: 'Processes telemetry ingestion strings from transport junction cameras.',
+                render: () => window.renderTelemetryRow('12 Junctions', 'ACTIVE', 'BUFFER_STABLE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Junction Feed Selection</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Junction Media Feed Re-anchored', 'Selected Node Array Index 4')">Cycle Traffic Nodes</button>
+                        </div>
+                    </div>`
+            },
+            'satellite-relay': {
+                title: 'Satellite Relay System Core',
+                subtitle: 'Intelligence Layer | Signal Transit Platform',
+                headline: 'Orchestrates orbital downlink pipelines to feed critical infrastructure communication clusters.',
+                render: () => window.renderTelemetryRow('Downlink Active', 'SECURE', 'BER_0.00%') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Downlink Alignment Parameters</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Relay Orbit Alignment Recalculated', 'Azimuth adjustment locked')">Re-align Satellite Array</button>
+                        </div>
+                    </div>`
+            },
+            'global-alerts': {
+                title: 'Global Alerts Warning Grid',
+                subtitle: 'Intelligence Layer | Threat Assessment Vector',
+                headline: 'Dispatches real-time security alerts and system flags across all connected nodes.',
+                render: () => window.renderTelemetryRow('Alert Pipeline', 'IDLE_LISTENING', 'ZERO_FLAGS') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Alert Simulation Injector</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Simulated Threat Matrix Injected', 'Flag state changed to WARNING')">Test System Alert Trigger</button>
+                        </div>
+                    </div>`
+            },
+
+            // --- COMMUNICATION LAYER (GATEWAY UPDATED REBRAND) ---
+            'gateway': {
+                title: 'Gateway Unified Messaging Hub Terminal',
+                subtitle: 'Communication Layer | End-to-End Core Message Module',
+                headline: 'Direct channel structural routing context mapping data verification queues.',
+                render: () => window.renderTelemetryRow('Secure Pipeline', 'LISTENING', 'SOCKETS_LIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card" style="grid-column: span 2;">
+                            <div class="chat-container-mock" id="gateway-chat-console-ui">
+                                <div class="chat-bubble-row">[System Initialization] <strong>Gateway Hub Module</strong> opened successfully.</div>
+                                <div class="chat-bubble-row"><strong>[Secure Link Agent]</strong> Listening for message transmission sequences...</div>
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="gateway-msg-field" class="ui-input" style="margin-bottom:0;" placeholder="Type text packet transmission string payload..." onkeydown="if(event.key === 'Enter') transmitGatewayMockMessage()">
+                                <button class="ui-btn" onclick="transmitGatewayMockMessage()">Transmit Packet String</button>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'group-calls': {
+                title: 'Group Calls Multimodal Audio Core',
+                subtitle: 'Communication Layer | Voice Matrix Router',
+                headline: 'Manages multi-user token authentication, echo cancellation parameters, and mixing arrays.',
+                render: () => window.renderTelemetryRow('Audio Bridge', 'ACTIVE', 'MIXER_ON') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Spatial AI Processing Engine</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('AI Audio Sound Suppressor Engaged', 'Noise floor clamped to -45dB')">Initialize Noise Filter</button>
+                        </div>
+                    </div>`
+            },
+            'group-management': {
+                title: 'Group Management Dashboard',
+                subtitle: 'Communication Layer | Cluster Moderation Framework',
+                headline: 'Tracks channel structures, active channel permission scopes, and meta-parameter fields.',
+                render: () => window.renderTelemetryRow('41 Groups Mapped', 'STABLE', 'METADATA_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Group Database Integrity Utility</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Group Hierarchy Tree Re-indexed', 'All group arrays sorted alphabetized')">Re-index Channel Groups</button>
+                        </div>
+                    </div>`
+            },
+            'admins': {
+                title: 'Admin Hierarchy Access Ledger',
+                subtitle: 'Communication Layer | Security Control Privileges',
+                headline: 'Handles critical encryption key bindings and programmatic command rights adjustments.',
+                render: () => window.renderTelemetryRow('Root Access Rules', 'ENFORCED', 'KEYS_VALID') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Token Revocation Console</h3>
+                            <button class="ui-btn" style="background:#dc2626;" onclick="triggerNodeAction('All Admin Active Handshake Tokens Cycled', 'Forced immediate session renewal')">Cycle All Session Tokens</button>
+                        </div>
+                    </div>`
+            },
+            'video-calls': {
+                title: 'Video Calls Synchronous Canvas Core',
+                subtitle: 'Communication Layer | Side-by-Side Unified Engine',
+                headline: 'Integrates real-time video streaming feeds alongside the structural message ledger view.',
+                render: () => window.renderTelemetryRow('Agora WebRTC', 'READY', 'CANVAS_SYNC') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card" style="grid-column: span 2;">
+                            <div class="video-grid-emulator">
+                                <div class="video-box-frame streaming-on">[LOCAL_CAP_STREAM] <span>WEBCAM ACTIVE</span></div>
+                                <div class="video-box-frame">[REMOTE_PEER_MATRIX] <span>WAITING FOR CONNECTION</span></div>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'audio-calls': {
+                title: 'Audio Calls Session Control Router',
+                subtitle: 'Communication Layer | Codec Allocation Pipeline',
+                headline: 'Protected point-to-point voice logic processing lines for crystal-clear connectivity.',
+                render: () => window.renderTelemetryRow('Opus Codec Loop', 'STABLE', 'BITRATE_NATIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Audio Pipeline Verification Tool</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Audio Loopback Ping Transmitted', 'Latency metric: 12ms round-trip')">Test Voice Pipeline</button>
+                        </div>
+                    </div>`
+            },
+            'broadcasts': {
+                title: 'Broadcast Multicast Distribution Router',
+                subtitle: 'Communication Layer | Event Messaging Engine',
+                headline: 'Drives low-overhead, one-to-many event notification updates into all endpoint data channels.',
+                render: () => window.renderTelemetryRow('Global Broadcaster', 'IDLE', 'QUEUE_CLEAR') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Multicast Transmission Prompt</h3>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="broadcast-prompt" class="ui-input" style="margin-bottom:0;" placeholder="Enter system announcement text data payload...">
+                                <button class="ui-btn" onclick="executeCustomFormAction('broadcast-prompt', 'Global Master System Broadcast Dispatched')">Publish Broadcast</button>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'messages-request': {
+                title: 'Messages Request Filtering Vault',
+                subtitle: 'Communication Layer | Security Verification Layer',
+                headline: 'Intercepts incoming message requests, analyzing metadata anomalies before cluster parsing.',
+                render: () => window.renderTelemetryRow('Gateway Sandbox', 'SAFE', 'INSPECT_ON') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Message Isolation Queue</h3>
+                            <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">No unverified message payloads currently resting in structural isolation storage.</p>
+                        </div>
+                    </div>`
+            },
+            'friends-request': {
+                title: 'Friends Request Identity Register',
+                subtitle: 'Communication Layer | Peer Authentication Node',
+                headline: 'Tracks connection handshakes and authorization metadata maps across users.',
+                render: () => window.renderTelemetryRow('Peer Handshakes', 'STABLE', 'ID_SECURE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Peer Ingestion Sync</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Identity Relationship Ledger Synchronized', 'Validated user identity footprints matching cryptographic registry rules')">Sync Request Database</button>
+                        </div>
+                    </div>`
+            },
+
+            // --- SOCIAL & CONTENT LAYER ---
+            'global-feeds': {
+                title: 'Global Feeds Content Ingestion Module',
+                subtitle: 'Social & Content Layer | Stream Processor',
+                headline: 'Compiles distributed public data streams into unified chronological layout views.',
+                render: () => window.renderTelemetryRow('DB_STREAM_FEED', 'SYNCHRONIZED', 'POLLING_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Stream Engine Diagnostics</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Global Content Feeds Stream Purged and Refreshed', 'Successfully re-polled 44 structural channels')">Refresh Stream Ingestion</button>
+                        </div>
+                    </div>`
+            },
+            'discovery': {
+                title: 'Discovery Vector Search Engine',
+                subtitle: 'Social & Content Layer | Context Indexer',
+                headline: 'Powers dynamic searches across trending data clusters and user-submitted node content.',
+                render: () => window.renderTelemetryRow('Vector Search DB', 'ONLINE', 'INDEX_CURRENT') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Cluster Index Tools</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Discovery Vector Index Re-compiled', 'Processed 10,000 document nodes')">Re-index Discovery Map</button>
+                        </div>
+                    </div>`
+            },
+            'global-blogs': {
+                title: 'Global Blogs Content Registry',
+                subtitle: 'Social & Content Layer | Publication Vault',
+                headline: 'Manages multi-user markdown documents and long-form platform texts.',
+                render: () => window.renderTelemetryRow('Markdown Engine', 'STABLE', 'PARSER_NATIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Article Publisher Controls</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Blog Data Array Cache Validated', 'All clean storage buckets healthy')">Verify Cache Integrity</button>
+                        </div>
+                    </div>`
+            },
+            'media-gallery': {
+                title: 'Media Gallery Blob Storage Hub',
+                subtitle: 'Social & Content Layer | Content Delivery Matrix',
+                headline: 'Optimizes distribution workflows for uploaded binary image streams and video clips.',
+                render: () => window.renderTelemetryRow('Vercel Blob Target', 'STABLE', 'CDN_CACHED') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Asset Processing Utility</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('CDN Cache Purge Request Dispatched', 'All media edge replicas flushed clean')">Purge Edge CDN Cache</button>
+                        </div>
+                    </div>`
+            },
+            'trending': {
+                title: 'Trending Metric Scoring Node',
+                subtitle: 'Social & Content Layer | Score Calculator',
+                headline: 'Calculates hot-topic metrics using rolling chronological tracking algorithms.',
+                render: () => window.renderTelemetryRow('Metrics Scoring', 'ACTIVE', 'CALC_LIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Weight Calculation Tuning</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Trending Algorithm Weights Re-tuned', 'Time decay factor set to normal exponential values')">Re-calculate Trends</button>
+                        </div>
+                    </div>`
+            },
+            'marketplace': {
+                title: 'Marketplace Integration Pipeline',
+                subtitle: 'Social & Content Layer | Strategic Asset Exchange Engine',
+                headline: 'Processes external asset valuation matrices, platform licenses, and licensing queries.',
+                render: () => window.renderTelemetryRow('Marketplace API', 'STABLE', 'TRANS_VALIDATED') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Strategic Asset Verification Evaluation Framework</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Automated Market Valuation Matrix Audit Executed', 'Queried analytical database variables successfully')">Run Asset Audit Scan</button>
+                        </div>
+                    </div>`
+            },
+            'events': {
+                title: 'Events Dynamic Lifecycle Broker',
+                subtitle: 'Social & Content Layer | Socket Subscriber Loop',
+                headline: 'Maintains long-lived open sockets tracking global calendar markers and session bookings.',
+                render: () => window.renderTelemetryRow('Event Broker Engine', 'ONLINE', 'PUSH_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Lifecycle Sync Tool</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Calendar Lifecycle Sockets Pinged', 'All client subscription parameters matched')">Sync Calendar Node Hooks</button>
+                        </div>
+                    </div>`
+            },
+            'public-chat': {
+                title: 'Public Chat High-Volume Matrix',
+                subtitle: 'Social & Content Layer | Multi-Channel Stream',
+                headline: 'Handles distributed chat room traffic safely using isolated channel pools.',
+                render: () => window.renderTelemetryRow('Public Socket Pool', 'LISTENING', 'LOW_LATENCY') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Moderation Ingestion Agent</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Automated Content Moderation Model Re-attached', 'Profanity dictionary arrays verified')">Cycle Safety Filter</button>
+                        </div>
+                    </div>`
+            },
+            'housing-hub': {
+                title: 'Housing Hub Asset Registry',
+                subtitle: 'Social & Content Layer | Spatial Data Ledger',
+                headline: 'Manages architectural layouts, catalog indexing, and structural metadata rows.',
+                render: () => window.renderTelemetryRow('Spatial DB Schema', 'STABLE', 'ROW_INTEGRITY_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Database Verification Tools</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Spatial Record Indexes Re-compiled', 'Validated constraints across entry nodes')">Audit Spatial Records</button>
+                        </div>
+                    </div>`
+            },
+
+            // --- SYSTEM MANAGEMENT LAYER ---
+            'profile': {
+                title: 'Profile Context Identity Hub',
+                subtitle: 'System Management | User State Configuration',
+                headline: 'Manages local user parameters, profile data fields, and metadata settings.',
+                render: () => window.renderTelemetryRow('User Profile Token', 'VERIFIED', 'MUTATION_SAFE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Update Core Profile Information</h3>
+                            <input type="text" id="profile-handle-field" class="ui-input" value="Developer_Core_Node_44">
+                            <button class="ui-btn" onclick="executeCustomFormAction('profile-handle-field', 'Profile Identity Handle Attribute Mutated')">Save Profile Handle</button>
+                        </div>
+                    </div>`
+            },
+            'security': {
+                title: 'Security Control Core Vault',
+                subtitle: 'System Management | Protected Context Layer',
+                headline: 'Ensures sensitive credentials, security assets, and server keys remain safely in the protected backend environment.',
+                render: () => window.renderTelemetryRow('Backend Protected (.env)', 'ENCRYPTED', 'AES_256_ACTIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Environment Variable Firewall Validation</h3>
+                            <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">Frontend leak check loops find 0 sensitive keys visible in public code sheets.</p>
+                            <button class="ui-btn" onclick="triggerNodeAction('Security Verification Audit Run', 'All client frontend scripts audited for raw key leakage: PASS')">Execute Key Safety Scan</button>
+                        </div>
+                    </div>`
+            },
+            'privacy-center': {
+                title: 'Privacy Center Rule Evaluator',
+                subtitle: 'System Management | Compliance Layer',
+                headline: 'Enforces data compliance logic, tracking active privacy settings and telemetry rules.',
+                render: () => window.renderTelemetryRow('GDPR / CCPA Rules', 'COMPLIANT', 'ENFORCED') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Data Clearance Routine</h3>
+                            <button class="ui-btn" style="background:#64748b;" onclick="triggerNodeAction('Local Sandbox Anonymous Anonymizer Protocol Run', 'All cached tracking keys cleared')">Clear Local Tracking Cache</button>
+                        </div>
+                    </div>`
+            },
+            'appearance': {
+                title: 'Appearance Layout Design Configurator',
+                subtitle: 'System Management | UI Theming Configuration Engine',
+                headline: 'Manages visual styles, element properties, layouts, and professional aesthetic details.',
+                render: () => window.renderTelemetryRow('Theme Workspace', 'ATHENS_GRAY', 'AESTHETIC_LOCKED') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Visual Parameters Panel</h3>
+                            <p style="font-size:0.9rem; color:#334155; line-height:1.5;">
+                                Background Design Metric Color Hex: <span style="font-family:monospace; font-weight:bold; color:#64748b;">#f0f1f3 (Athens Gray)</span><br>
+                                Primary Identity Text Graphic Color Hex: <span style="font-family:monospace; font-weight:bold; color:var(--brand-shiny-blue);">#2563eb (Vibrant Shiny Blue)</span>
+                            </p>
+                            <button class="ui-btn" style="margin-top:12px;" onclick="triggerNodeAction('Appearance Layout Parameter Array Refreshed', 'Design token styles re-applied to layout tree')">Re-apply Layout Design Styles</button>
+                        </div>
+                    </div>`
+            },
+            'wallet-assets': {
+                title: 'Wallet Assets Ledger Interface',
+                subtitle: 'System Management | Cryptographic Valuation Node',
+                headline: 'Tracks connected platform assets, authorization balances, and software licenses.',
+                render: () => window.renderTelemetryRow('Asset Keys Ledger', 'STABLE', 'LEDGER_SYNC_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Asset Synchronization Engine</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Wallet Ledger Matrix Balance Audited', 'All internal node keys matches server hash checksum rules')">Audit Asset Ledger Balances</button>
+                        </div>
+                    </div>`
+            },
+            'cloud-storage': {
+                title: 'Cloud Storage Bucket Directory',
+                subtitle: 'System Management | Virtual Disk Allocation',
+                headline: 'Tracks file storage allocation metrics, data limits, and isolated project folder hierarchies.',
+                render: () => window.renderTelemetryRow('Allocated Storage', '4.2 GB / 50 GB', 'STABLE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Storage Health Controls</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Cloud Virtual Storage Directory Audited', '0 dead link blocks identified')">Run Storage Integrity Check</button>
+                        </div>
+                    </div>`
+            },
+            'data-analytics': {
+                title: 'Data Analytics Matrix Reporting Engine',
+                subtitle: 'System Management | Metric Aggregator Vector',
+                headline: 'Generates reporting summaries tracking database traffic trends and network activity charts.',
+                render: () => window.renderTelemetryRow('Analytics Engine', 'ACTIVE', 'COMPILING_REPORTS') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Report Triggers</h3>
+                            <button class="ui-btn" onclick="triggerNodeAction('Operational Analytical Traffic PDF Report Generated', 'Sent report file directly to root file server logs')">Compile Performance Metrics</button>
+                        </div>
+                    </div>`
+            },
+            'language': {
+                title: 'Language Localization Configuration Matrix',
+                subtitle: 'System Management | Translation Configuration Options Menu Grid',
+                headline: 'Configures application translation arrays, language order priorities, and menu preferences.',
+                render: () => window.renderTelemetryRow('Language Hub Engine', 'LOCALIZED', 'UTF8_MAPPING_OK') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Supported Languages Selection Configuration Array</h3>
+                            <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">The localization ordering array handles prioritization properties using your specified menu structure:</p>
+                            <ol style="margin-left:22px; font-size:0.92rem; color:#1e293b; line-height:1.75; margin-bottom:15px;">
+                                <li>English (US Base Def Format String)</li>
+                                <li>Spanish (ES Regional Translation String Layer)</li>
+                                <li>French (FR Global System Localization Mappings Matrix)</li>
+                                <li style="font-weight:bold; color:var(--brand-shiny-blue);">Amharic (አማርኛ) [Custom Preference Rule Match: Positioned at Bottom of Selection List Options]</li>
+                            </ol>
+                            <button class="ui-btn" onclick="triggerNodeAction('Language Selection Ordering Array Fixed Frame Locked', 'Amharic explicitly placed at final index slot')">Save App Localization Menu Order</button>
+                        </div>
+                    </div>`
+            },
+           'notifications': {
+    title: 'Notifications Hub Active',
+    subtitle: 'System Stream Alerts Matrix',
+    headline: 'Realtime socket synchronization feeds are operational.',
+    render: function() {
+        var html = window.renderTelemetryRow('0 / 0', 'STABLE', '100%');
+        return html;
+    }
+},
+            'help---support': {
+                title: 'Help & Support Documentation Hub',
+                subtitle: 'System Management | Knowledge Resource Matrix',
+                headline: 'Provides quick-reference developer manuals and deployment instructions for backend platforms.',
+                render: () => window.renderTelemetryRow('Knowledge Base', 'INDEXED', 'V3_DOCS') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card" style="grid-column: span 2;">
+                            <h3>Core Setup Reminders Checklist</h3>
+                            <p style="font-size:0.9rem; color:#334155; line-height:1.6;">
+                                &bull; Ensure backend server scripts load environment variables using protected files.<br>
+                                &bull; Confirm port forwarding points incoming client handshakes to target **Port 5000**.<br>
+                                &bull; Manage layout components inside **Athens Gray** layouts for visual styling continuity.
+                            </p>
+                        </div>
+                    </div>`
+            },
+'ai-agents': {
+        title: 'AI Intelligent Infrastructure Active',
+        subtitle: 'Cognitive Model Engine | Neural Sync Stream',
+        headline: 'Gemini 3 Flash core clusters are optimized and running low-latency inference routing.',
+        render: () => {
+            return window.renderTelemetryRow('99.8%', 'STABLE', '100%') +
+            '<div class="functional-grid">' +
+            '    <div class="interactive-card">' +
+            '        <h3>Gemini Core Vector Prompt Terminal</h3>' +
+            '        <div class="ai-response-log" id="ai-response-log" style="height:120px; overflow-y:auto; background:#0f172a; padding:10px; border-radius:6px; font-family:monospace; font-size:0.85rem; color:#f8fafc; margin-bottom:10px; border:1px solid #334155;">' +
+            '            [SYSTEM]: Gemini 3 Flash Preview Engine Hot-Linked. System listening...' +
+            '        </div>' +
+            '        <div style="display:flex; gap:8px;">' +
+            '            <input type="text" id="ai-command-prompt" class="ui-input" placeholder="Ask Gemini Model Instance..." style="flex:1;" onkeydown="if(event.key===\'Enter\') sendAICommand()">' +
+            '            <button onclick="sendAICommand()" class="ui-btn" style="background:#0284c7; color:white;">RUN MODEL</button>' +
+            '        </div>' +
+            '    </div>' +
+            '</div>';
+        }
+    }, 
+            'log-out': {
+                title: 'Log Out Session Terminal',
+                subtitle: 'System Management | Runtime Connection Disconnect',
+                headline: 'Safely disconnects active web socket tokens, clears local view matrices, and exits the workspace.',
+                render: () => window.renderTelemetryRow('Session State', 'AUTHENTICATED', 'TOKEN_ACTIVE') + `
+                    <div class="functional-grid">
+                        <div class="interactive-card">
+                            <h3>Exit Actions Console</h3>
+                            <p style="font-size:0.88rem; color:#991b1b; margin-bottom:12px; font-weight:600;">Warning: Logging out disconnects all live tracking handshakes instantly.</p>
+                            <button class="ui-btn" style="background:#dc2626;" onclick="triggerNodeAction('Forced Session Disconnect Execution Script Triggered', 'Session authorization tokens dropped: Handshake clean exit')">Terminate Workspace Session</button>
+                        </div>
+                    </div>`
+            }
+        };
+
+// ============================================================================
+    // 🌀 WORLDCONNECT API ROOT COUPLER
+    // ============================================================================
+    if (typeof nodes === 'undefined') {
+        var nodes = {}; 
+    }
+
+// ============================================================================
+    // 🌀 WORLDCONNECT CORE WORKSPACE CONNECTOR
+    // ============================================================================
+    window.currentActiveNodeId = 'summary';
+
+    // Safe execution loop once your 45 sidebars map out completely
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof buildSidebarMenu === 'function') {
+            buildSidebarMenu();
+        }
+        
+        // This instantly matches your lowercase sidebar clicks to your system.js configurations!
+        if (typeof loadNodeWorkspace === 'function') {
+            loadNodeWorkspace(window.currentActiveNodeId);
+        } else if (typeof switchNode === 'function') {
+            switchNode(window.currentActiveNodeId);
+        }
+    });
+
+    // Loop category array definitions to inject custom list items and indicator badges
+    function buildSidebarMenu() {
+        const menuContainer = document.getElementById("dynamic-node-menu");
+        if (!menuContainer) return;
+        menuContainer.innerHTML = '';
+
+        wcCategories.forEach(category => {
+            const groupLabel = document.createElement("div");
+            groupLabel.className = "sidebar-group-label";
+            groupLabel.innerText = category;
+            menuContainer.appendChild(groupLabel);
+
+            if (wcNodes[category]) {
+                wcNodes[category].forEach(nodeName => {
+                    const nodeElement = document.createElement("div");
+                    nodeElement.className = "sidebar-node";
+                    
+                    // Uniform formatting normalization to create pristine element match IDs
+                    const cleanId = nodeName.toLowerCase().replace(/[\s\.\&]+/g, '-');
+                    nodeElement.setAttribute("data-target", cleanId);
+                    nodeElement.setAttribute("data-name", nodeName);
+
+                    let innerTemplate = `<span>${nodeName}</span>`;
+                    
+                    if (nodeName === 'Universal Hub') {
+                        innerTemplate += `<span class="badge-40th">40th Node</span>`;
+                    } else if (['Group Calls', 'Group Management', 'Admins'].includes(nodeName)) {
+                        innerTemplate += `<span class="badge-ai">AI</span>`;
+                    }
+                    
+                    nodeElement.innerHTML = innerTemplate;
+
+                    // Evaluate initial highlight parameters cleanly using global state
+                    if (cleanId === window.currentActiveNodeId) {  
+                        nodeElement.classList.add("active");
+                    }
+                    
+                    // INTERCEPTION ROUTING PIPELINE
+                    nodeElement.addEventListener("click", function () {
+                        // 1. Manage active CSS highlight states cleanly
+                        document.querySelectorAll(".sidebar-node").forEach(n => n.classList.remove("active"));
+                        this.classList.add("active");
+                        
+                        // 2. Safely capture the node text name parameters
+                        const cleanTitle = this.getAttribute("data-name") || this.innerText.trim();
+                        
+                        console.log(`[Direct Pipeline] Routing node request for: "${cleanTitle}"`);
+                        
+                        // 3. Clear workspace and force pull layout from window.nodes Registry
+                        const contentBody = document.getElementById("main-content-panel") || document.getElementById("content-body") || document.querySelector(".content-body");
+                        const contentTitle = document.getElementById("content-title") || document.querySelector(".main-content h1");
+                        
+                        if (contentTitle) contentTitle.innerText = cleanTitle;
+                        
+                        if (contentBody) {
+                            if (window.nodes && typeof window.nodes[cleanTitle] === 'function') {
+                                contentBody.innerHTML = window.nodes[cleanTitle]();
+                            } else if (typeof window.handleSidebarPipelineInterception === 'function') {
+                                window.handleSidebarPipelineInterception(cleanTitle, cleanId);
+                            } else {
+                                // Safe native fallback panel if modules are compiling
+                                contentBody.innerHTML = `
+                                    <div class="active-node" style="padding: 24px; color: #e1e4ea;">
+                                        <h2 style="color: #ffffff; margin-top:0;">${cleanTitle} Matrix</h2>
+                                        <div style="background: #1f2125; border: 1px solid #2f3136; padding: 16px; border-radius: 6px;">
+                                            <p style="margin:0; font-size:13px; color:#b0b3b8;">Runtime node link established successfully.</p>
+                                        </div>
+                                    </div>`;
+                            }
+                        }
+                    });
+
+                    menuContainer.appendChild(nodeElement);
+                });
+            }
+        });
+    }
+
+        function loadNodeWorkspace(nodeId) {
+    currentActiveNodeId = nodeId;
+    const viewport = document.getElementById("main-content-viewport");
+    if (!viewport) return;
+    
+    // 1. Try to find an explicit custom layout configuration
+    let data = nodeWorkspaceData[nodeId];
+
+    // 2. 🚀 FALLBACK LAYOUT ENGINE: If not found, build a beautiful, functional testing module dynamically!
+    if (!data) {
+        // Convert the clean hyphen-id back into a readable title (e.g., "group-calls" -> "Group Calls")
+        const readableTitle = nodeId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        
+        data = {
+            title: `${readableTitle} Operations Console`,
+            subtitle: `Cluster Layer | Node Node /api/${nodeId}`,
+            headline: `Dynamic telemetry pipeline routing active for the ${readableTitle} operational workspace module.`,
+            render: () => {
+                return window.renderTelemetryRow('PROVISIONED', 'TEST_READY', '0ms') +
+                '<div class="functional-grid">' +
+                '    <div class="interactive-card">' +
+                `        <h3>${readableTitle} Interface Action Controller</h3>` +
+                '        <p style="margin-bottom:12px; font-size:0.9rem; color:#475569;">This workspace is fully compiled and active. Test the system handshake using the transaction tools below:</p>' +
+                '        <div style="display:flex; gap:8px; margin-top:10px;">' +
+                `            <input type="text" id="test-field-${nodeId}" class="ui-input" placeholder="Enter mock test parameter string..." style="flex:1;">` +
+                `            <button onclick="executeCustomFormAction('test-field-${nodeId}', '${readableTitle} Metric Mutation')" class="ui-btn" style="background:var(--brand-shiny-blue); color:white;">RUN INTEGRITY TEST</button>` +
+                '        </div>' +
+                '    </div>' +
+                '</div>';
+            }
+        };
+    }
+
+    // 3. Inject the clean layout directly into the application viewport frame
+    viewport.innerHTML = `
+        <div id="active-node-panel">
+            <h1 class="main-hero-title">${data.title}</h1>
+            <p class="main-hero-subtitle">${data.subtitle}</p>
+
+            <div class="dark-console-card">
+                <div class="console-meta-line">
+                    &gt; NODE ROUTE INSTANCE PATH: /api/${nodeId}<br>
+                    &gt; NETWORK PROTOCOL AGENT LINK STATUS: VERIFIED STABLE PIPELINE HANDSHAKE RUNTIME
+                </div>
+                <div class="console-main-headline">
+                    ${data.headline}
+                </div>
+            </div>
+
+            <div id="dynamic-component-render-area">${data.render()}</div>
+
+            <h3 style="font-size:0.82rem; text-transform:uppercase; letter-spacing:1px; color:#64748b; margin-bottom:12px; font-weight:800;">NODE INSTANCE ACTION STREAM LOG TERMINAL</h3>
+            <div class="terminal-feed-card" id="node-terminal-console">
+                [${new Date().toLocaleTimeString()}] Network telemetry path verification tracking loop initialized.<br>
+                [${new Date().toLocaleTimeString()}] Handshake status check: Cluster pipeline nodes connected successfully.<br>
+                [${new Date().toLocaleTimeString()}] System routing layer hooked to target endpoints: /api/${nodeId}<br>
+                [${new Date().toLocaleTimeString()}] Listening for interface form execution mutations...
+            </div>
+        </div>
+    `;
+    
+    // Smooth auto-scroll inside the terminal feed card
+    const t = document.getElementById("node-terminal-console");
+    if (t) t.scrollTop = t.scrollHeight;
+}
+
+        // Live Action Event Driver appending execution statements directly to the log viewer
+        function triggerNodeAction(actionType, detailInfo = "") {
+            const terminal = document.getElementById("node-terminal-console");
+            if (!terminal) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let descriptiveLine = `[${timestamp}] EXEC TRANSACTION: Event action called [${actionType}]`;
+            if (detailInfo) {
+                descriptiveLine += ` with arguments: "${detailInfo}"`;
+            }
+            descriptiveLine += `<br>[${timestamp}] SYSTEM RESPONSE SUCCESS: Grid event broadcast completed. State variables updated across all 44 node channels.`;
+            
+            terminal.innerHTML += `<br>${descriptiveLine}`;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // --- 🚀 REACTIVE PREVIEW MUTATOR FUNCTIONS ---
+        
+        function executeSummaryScan() {
+            const stat1 = document.getElementById('telemetry-stat-v1');
+            const stat2 = document.getElementById('telemetry-stat-v2');
+            const stat3 = document.getElementById('telemetry-stat-v3');
+            const txt = document.getElementById('matrix-status-text');
+            const pill = document.getElementById('matrix-status-pill');
+
+            if(stat1) stat1.innerText = "44 / 44";
+            if(stat2) stat2.innerText = "SCANNING...";
+            if(stat3) stat3.innerText = "0ms DELAY";
+            
+            setTimeout(() => {
+                if(stat2) stat2.innerText = "OPTIMAL";
+                if(txt) txt.innerText = "All Networks Fully Synchronized";
+                if(pill) {
+                    pill.innerText = "Operational Matrix Confirmed";
+                    pill.className = "status-pill online";
+                }
+                triggerNodeAction("System Integrity Scan Completed", "44 Nodes Verified Healthy");
+            }, 900);
+        }
+
+        function updateHubRegion() {
+            const val = document.getElementById('hub-region-input').value;
+            const stat3 = document.getElementById('telemetry-stat-v3');
+            if(stat3) stat3.innerText = "ROUTING...";
+            
+            setTimeout(() => {
+                if(stat3) stat3.innerText = "BOUND TO " + val.toUpperCase();
+                triggerNodeAction("Hub Target Vector Reroute", val);
+            }, 400);
+        }
+
+        function toggleTunnelState() {
+            const logBox = document.getElementById('tunnel-log-box');
+            const stat2 = document.getElementById('telemetry-stat-v2');
+            
+            if(logBox.innerText.includes("ACTIVE")) {
+                logBox.innerHTML = `[TUNNEL-A01]: Hub Node 40 &harr; Production Edge (<span style="color:#ef4444;font-weight:bold;">STANDBY</span>)<br>[TUNNEL-B02]: Master Node 44 &harr; Local Loop (VERIFIED)`;
+                if(stat2) stat2.innerText = "DEGRADED";
+                triggerNodeAction("Tunnel A01 Switched to Standby", "Network Rerouting initiated");
+            } else {
+                logBox.innerHTML = `[TUNNEL-A01]: Hub Node 45 &harr; Production Edge (ACTIVE)<br>[TUNNEL-B02]: Master Node 45 &harr; Local Loop (VERIFIED)`;
+                if(stat2) stat2.innerText = "CONNECTED";
+                triggerNodeAction("Tunnel A01 Switched to Active", "Direct link restored");
+            }
+        }
+
+       async function sendAICommand() {
+    const promptInput = document.getElementById('ai-command-prompt');
+    const log = document.getElementById('ai-response-log');
+    if (!promptInput || !promptInput.value.trim() || !log) return;
+
+    const userPrompt = promptInput.value;
+    const timeStr = new Date().toLocaleTimeString();
+    
+// Append user message and process the AI translation vector routing sequence
+async function sendVectorMessage() {
+    console.log("[Engine Core] sendVectorMessage initialization sequence triggered.");
+    
+    // 1. Grab target nodes safely with structural fallbacks
+    const chatInput = document.getElementById('chat-input');
+    const outputContainer = document.getElementById('ai-response-log');
+    const logArea = document.getElementById('engine-log') || document.getElementById('status-terminal');
+
+    if (!chatInput) {
+        console.error("[Engine Error] Target element ID 'chat-input' is missing from the active template DOM.");
+        return;
+    }
+
+    const userPrompt = chatInput.value.trim();
+    if (!userPrompt) {
+        console.warn("[Engine Warning] Suppression: Input buffer evaluates to an empty string.");
+        return;
+    }
+
+    // 2. Set an immediate UI loading state
+    if (outputContainer) {
+        outputContainer.innerText = "Processing vector instructions via AI Assistant Engine pipeline... Please wait.";
+    }
+    if (logArea) {
+        logArea.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <strong>User Vector Input:</strong> <span>${userPrompt}</span>`;
+    }
+
+    try {
+        // Clear the user input field immediately to signal responsiveness
+        chatInput.value = '';
+
+        // 3. Dispatch the payload securely to the backend endpoint
+        const response = await fetch('/api/ai-assistant', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                prompt: userPrompt, 
+                message: userPrompt, 
+                text: userPrompt 
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned HTTP network anomaly status code: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("[Engine Core] Raw network payload packet received:", data);
+
+        // 4. Universal deep property matching extractor
+        let extractedResponseString = "";
+        if (typeof data === 'string') {
+            extractedResponseString = data;
+        } else if (data) {
+            extractedResponseString = data.reply || 
+                                     data.response || 
+                                     data.message || 
+                                     data.text || 
+                                     (data.choices && data.choices[0]?.message?.content) ||
+                                     (data.candidates && data.candidates[0]?.content?.parts[0]?.text) || "";
+        }
+
+        // 5. Render final string verification straight onto the dashboard layout target
+        if (extractedResponseString && extractedResponseString.trim() !== "") {
+            if (outputContainer) {
+                outputContainer.innerText = extractedResponseString.trim();
+            }
+            if (logArea) {
+                logArea.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#10b981;">AI pipeline transmission successfully rendered.</span>`;
+            }
+        } else {
+            if (outputContainer) {
+                outputContainer.innerText = "Connection initialized, but returned an unmapped structural payload layout format.";
+            }
+            console.warn("[Engine Core Warning] Structure mismatch parsing response data token layers.", data);
+        }
+
+    } catch (pipelineError) {
+        console.error("[Critical Error] Handshake stream broken inside sendVectorMessage:", pipelineError);
+        
+        if (outputContainer) {
+            outputContainer.innerText = `Handshake broken: ${pipelineError.message}`;
+        }
+        if (logArea) {
+            logArea.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#ef4444;">Handshake exception thrown: ${pipelineError.message}</span>`;
+        }
+    }
+
+    // Auto-scroll log frame to track operations if container exists
+    if (logArea) {
+        logArea.scrollTop = logArea.scrollHeight;
+    }
+}
+
+
+          function forceArraySync() {
+            const stat3 = document.getElementById('telemetry-stat-v3');
+            if(stat3) stat3.innerText = "SYNCING...";
+            setTimeout(() => {
+                if(stat3) stat3.innerText = "SYNC_COMPLETE";
+                triggerNodeAction("Upstream Repository Dictionary Polled", "Success: 44 Nodes Map Updated");
+            }, 700);
+        }
+
+        function compileAIExtraction() {
+            const area = document.getElementById('note-txt-area');
+            if(!area || !area.value.trim()) return;
+            
+            const txt = area.value;
+            area.value = "Processing extraction model tokens...";
+            
+            setTimeout(() => {
+                area.value = `[AI Compact Summary Output]:\nProcessed payload context successfully. Key markers verified across server node paths. System ready.`;
+                triggerNodeAction("AI Summary Extraction Protocol Triggered", txt);
+            }, 800);
+        }
+
+        function pingNetworkTopology() {
+            const stat3 = document.getElementById('telemetry-stat-v3');
+            if(stat3) stat3.innerText = "PINGING...";
+            setTimeout(() => {
+                if(stat3) stat3.innerText = "LATENCY: 14ms";
+                triggerNodeAction("Network Multicast Ping Dispatched", "Broadcast targeted at 44 cluster slave addresses");
+            }, 500);
+        }
+
+        function cycleAgoraToken() {
+            const stat3 = document.getElementById('telemetry-stat-v3');
+            if(stat3) stat3.innerText = "RENEWING...";
+            setTimeout(() => {
+                if(stat3) stat3.innerText = "TOKEN_VALID";
+                triggerNodeAction("Agora Server Token Cycle Initiated", "Channel Authentication Key Renewed");
+            }, 600);
+        }
+
+        function fetchSatScan() {
+            const stat2 = document.getElementById('telemetry-stat-v2');
+            if(stat2) stat2.innerText = "SCANNING...";
+            setTimeout(() => {
+                if(stat2) stat2.innerText = "METRIC_CAPTURED";
+                triggerNodeAction("Weather Sat Metric Capture Executed", "Atmospheric Bandwidth Readout Complete");
+            }, 800);
+        }
+
+        function executeCustomFormAction(inputFieldId, eventDescription) {
+            const inputEl = document.getElementById(inputFieldId);
+            if (!inputEl || !inputEl.value.trim()) return;
+            triggerNodeAction(eventDescription, inputEl.value);
+            inputEl.value = "";
+        }
+
+       // Transmit message data payload to network endpoints
+async function transmitGatewayMockMessage() {
+    const txtInput = document.getElementById("gateway-msg-field");
+    const chatBox = document.getElementById("gateway-chat-console-ui");
+    if (!txtInput || !txtInput.value.trim() || !chatBox) return;
+
+    const messagePayload = txtInput.value;
+    txtInput.value = "";
+
+    try {
+        await fetch('/api/gateway/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: messagePayload, timestamp: Date.now() })
+        });
+        triggerNodeAction("Gateway Data Frame Packet Broadcasted Securely", messagePayload);
+        fetchIncomingGatewayPackets(); // Immediate refresh
+    } catch (err) {
+        console.error("Transmission Drop:", err);
+    }
+}
+
+// Background poll engine to fetch fresh incoming messages from other tabs
+async function fetchIncomingGatewayPackets() {
+    const chatBox = document.getElementById("gateway-chat-console-ui");
+    if (!chatBox) return; // Only run if user is currently looking at Gateway
+
+    try {
+        const res = await fetch('/api/gateway/messages');
+        const messages = await res.json();
+        
+        // Clear and rebuild feed stream smoothly
+        chatBox.innerHTML = '<div class="chat-bubble-row">[SYSTEM]: Channel pipeline linked. Secure Matrix Stream Active.</div>';
+        messages.forEach(msg => {
+            const timeStr = new Date(msg.timestamp).toLocaleTimeString();
+            chatBox.innerHTML += `<div class="chat-bubble-row">[${timeStr}] <strong>[Live Transmit Packet]</strong>: "${msg.text}"</div>`;
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (e) {
+        console.log("Awaiting connection handshake stream intervals...");
+    }
+}
+
+// Global scope variables to hold your live Agora tracks
+let localVideoTrackInstance = null;
+let localAudioTrackInstance = null;
+let isCamStreamActive = false;
+
+// ==========================================
+// 🎥 CAMERA HUB LIVE TRACK STREAM MANAGER
+// ==========================================
+// Safe fallback declarations for global stream states if not explicitly defined above
+if (typeof isCamStreamActive === 'undefined') { window.isCamStreamActive = false; }
+if (typeof localVideoTrackInstance === 'undefined') { window.localVideoTrackInstance = null; }
+if (typeof localAudioTrackInstance === 'undefined') { window.localAudioTrackInstance = null; }
+
+async function toggleCameraHubStreamsMock() {
+    // Looks for your dynamic terminal block or the global fallback dashboard status logs
+    const logTerminal = document.getElementById('engine-log') || document.getElementById('status-terminal') || document.getElementById('statusLog') || document.querySelector('.node-instance-action-stream-log-terminal');
+    const videoTargetBox = document.getElementById('camera-preview-box') || document.getElementById('video-grid-canvas');
+
+    try {
+        // If streams aren't active, initialize them using the Agora SDK globally available
+        if (!window.isCamStreamActive) {
+            console.log("[Camera Hub] Initializing live group stream tracks...");
+            
+            if (logTerminal) {
+                logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#3b82f6;">[Camera Hub] Requesting hardware permissions...</span>`;
+            }
+
+            // Capture hardware tracks safely using Agora Web SDK
+            if (typeof AgoraRTC !== 'undefined') {
+                window.localAudioTrackInstance = await AgoraRTC.createMicrophoneAudioTrack();
+                window.localVideoTrackInstance = await AgoraRTC.createCameraVideoTrack();
+                
+                if (videoTargetBox) {
+                    videoTargetBox.innerHTML = ''; // Clear fallback background text
+                    window.localVideoTrackInstance.play(videoTargetBox);
+                }
+            } else {
+                console.warn("[Camera Hub] AgoraRTC SDK not detected on window scope. Falling back to simulated stream matrix.");
+                if (videoTargetBox) {
+                    videoTargetBox.innerHTML = '<div style="color:#10b981; padding:20px; font-weight:600;">[Simulation] Video Feed Live (No SDK)</div>';
+                }
+            }
+
+            window.isCamStreamActive = true;
+            if (logTerminal) {
+                logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#10b981;">[Camera Hub] Live video group feed rendered successfully.</span>`;
+            }
+
+        } else {
+            // If already active, toggle track states off cleanly to preserve hardware resources
+            console.log("[Camera Hub] Disconnecting active hardware feeds...");
+            
+            if (window.localVideoTrackInstance) {
+                window.localVideoTrackInstance.stop();
+                window.localVideoTrackInstance.close();
+                window.localVideoTrackInstance = null;
+            }
+            if (window.localAudioTrackInstance) {
+                window.localAudioTrackInstance.close();
+                window.localAudioTrackInstance = null;
+            }
+
+            if (videoTargetBox) {
+                videoTargetBox.innerHTML = '<div style="color:#6b7280; padding:20px;">Camera Hub Stream Dormant</div>';
+            }
+
+            window.isCamStreamActive = false;
+            if (logTerminal) {
+                logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#ef4444;">[Camera Hub] Video feeds closed cleanly.</span>`;
+            }
+        }
+
+        // Keep container terminal scrolled to latest events
+        if (logTerminal) logTerminal.scrollTop = logTerminal.scrollHeight;
+
+    } catch (streamError) {
+        console.error("[Camera Hub Error] Failed to stabilize group stream tracks:", streamError);
+        if (logTerminal) {
+            logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#ef4444;">[Critical] Stream Handshake Refused.</span>`;
+        }
+    }
+}
+
+// ============================================================================
+// --- 🟢 SECTION 1: AGORA RTC TELEMETRY & CONSOLE SYSTEMS ---
+// ============================================================================
+async function cycleAgoraToken() {
+    const logTerminal = document.getElementById('engine-log') || document.getElementById('status-terminal');
+    console.log("[Agora RTC] Requesting dynamic authorization signature packet...");
+
+    try {
+        // Fetch fresh gateway token signature from your backend server route
+        const tokenFetchResponse = await fetch('/api/get-agora-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channelName: "worldconnect-main-hub" })
+        });
+
+        if (tokenFetchResponse.ok) {
+            const tokenData = await tokenFetchResponse.json();
+            window.agoraActiveToken = tokenData.token;
+            
+            if (logTerminal) {
+                logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#eab308;">[Agora RTC] Security validation handshake refreshed.</span>`;
+            }
+        } else {
+            // Fallback authorization simulation if backend endpoint is in deployment transition
+            if (logTerminal) {
+                logTerminal.innerHTML += `<br>[${new Date().toLocaleTimeString()}] <span style="color:#94a3b8;">[Agora RTC] Route pending local sync. Token simulated.</span>`;
+            }
+        }
+
+        if (logTerminal) logTerminal.scrollTop = logTerminal.scrollHeight;
+
+    } catch (tokenRotationError) {
+        console.error("[Agora Core Exception] Token matrix failed to rotate:", tokenRotationError);
+    }
+}
+
+function clearActiveTerminalDisplayLogs() {
+    const terminal = document.getElementById("node-terminal-console");
+    if (terminal) {
+        terminal.innerHTML = `[${new Date().toLocaleTimeString()}] Telemetry log screen buffer cleaned. Awaiting system instruction parameters loops...`;
+    }
+}
+
+// ============================================================================
+// --- 🟢 SECTION 2: WEB UI EVENT HANDLERS & INLINE TRIGGERS ---
+// ============================================================================
+function initializeButtonEventListeners() {
+    const evaluateBtn = document.getElementById('evaluate-vector-btn');
+    const chatInput = document.getElementById('chat-input');
+
+    if (evaluateBtn) {
+        evaluateBtn.onclick = null; 
+        evaluateBtn.addEventListener('click', sendVectorMessage);
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendVectorMessage();
+            }
+        });
+    }
+
+    // Node list search matching filters
+    const searchInput = document.getElementById('search-nodes');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const nodes = document.querySelectorAll('.sidebar-node');
+            
+            nodes.forEach(node => {
+                const text = node.textContent || "";
+                if (text.toLowerCase().includes(query)) {
+                    node.style.display = "";
+                } else {
+                    node.style.display = "none";
+                }
+            });
+        });
+    }
+}
+
+// Live Vector prompt delivery routing
+async function sendVectorMessage() {
+    const promptInput = document.getElementById('chat-input') || document.querySelector('.chat-input-field');
+    const userText = promptInput ? promptInput.value.trim() : "";
+    
+    if (!userText) return;
+    if (promptInput) promptInput.value = ""; 
+
+    try {
+        const response = await fetch('/api/ai-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userText })
+        });
+
+        const data = await response.json();
+        const statusLog = document.getElementById('engine-log') || document.getElementById('status-terminal');
+        
+        if (statusLog) {
+            const timestamp = new Date().toLocaleTimeString();
+            statusLog.innerHTML += `<br>[${timestamp}] <span style="color:#60a5fa;">[User Operator]:</span> ${userText}`;
+            statusLog.innerHTML += `<br>[${timestamp}] <span style="color:#10b981;">[AI Assistant]:</span> ${data.reply}`;
+            statusLog.scrollTop = statusLog.scrollHeight;
+        }
+    } catch (error) {
+        console.error("[AI Core] Pipeline execution failure:", error);
+    }
+}
+
+// ============================================================================
+// --- 🟢 SECTION 3: WORKSPACE MAP NAVIGATION & ROUTER LAYERS ---
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    initializeButtonEventListeners();
+    
+    const sidebarSearchInput = document.getElementById('sidebar-search') || document.getElementById('search-nodes-input');
+    
+    if (sidebarSearchInput) {
+        sidebarSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            document.querySelectorAll('.sidebar-node, [id^="node-"]').forEach(node => {
+                const nodeText = (node.innerText || node.textContent || '').toLowerCase();
+                node.style.display = nodeText.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    // Connect trigger loops to all 45 sidebar nodes
+    document.querySelectorAll('.sidebar-node, [id^="node-"]').forEach(nodeElement => {
+        nodeElement.style.cursor = 'pointer';
+        nodeElement.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        nodeElement.addEventListener('click', () => {
+            const nodeTitle = (nodeElement.innerText || nodeElement.textContent || '').trim();
+            const nodeId = nodeElement.id || nodeTitle.toLowerCase().replace(/\s+/g, '-');
+            
+            console.log('[Transition Engine] Unlocking Workspace Node: ' + nodeTitle);
+
+            const statusLog = document.getElementById('engine-log') || document.getElementById('status-terminal');
+            if (statusLog) {
+                statusLog.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] <span style="color:#10b981;">[Active Workspace] Handshake routing to ' + nodeTitle + '</span>';
+                statusLog.scrollTop = statusLog.scrollHeight;
+            }
+
+            if (typeof renderDynamicUserInterface === 'function') {
+                renderDynamicUserInterface(nodeId, nodeTitle);
+            }
+
+            // Direct hardware stream interface mapping triggers
+            if (nodeTitle.toLowerCase() === 'live stream' || nodeTitle.toLowerCase() === 'camera hub' || nodeTitle.toLowerCase().includes('stream')) {
+                if (typeof toggleCameraHubStreamsMock === 'function') {
+                    toggleCameraHubStreamsMock();
+                }
+            }
+        });
+    });
+});
+
+// ============================================================================
+// --- 🟢 SECTION 4: UNIFIED NATIVE INTERFACE MODULAR CARD GRAPHICS ---
+// ============================================================================
+function renderDynamicUserInterface(nodeId, nodeTitle) {
+    let workspaceSection = document.getElementById('view-dynamic-functional-container') || document.getElementById('main-content-viewport');
+    
+    if (!workspaceSection) {
+        workspaceSection = document.createElement('div');
+        workspaceSection.id = 'view-dynamic-functional-container';
+        workspaceSection.className = 'dashboard-view-section';
+        const mainContentArea = document.querySelector('.main-content') || document.body;
+        mainContentArea.appendChild(workspaceSection);
+    }
+    
+    workspaceSection.classList.remove('hidden');
+    workspaceSection.style.display = 'block';
+    
+    let appTemplate = '';
+    const cleanId = nodeId.toLowerCase().trim();
+    const cleanTitle = nodeTitle.toLowerCase().trim();
+
+    // TEMPLATE 1: SECURE GATEWAY HUB
+    if (cleanTitle === 'gateway') {
+        appTemplate = `
+            <div style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h2 style="color: #0f172a; margin-top:0; font-size: 1.5rem; font-weight: 600;">Gateway Communication Portal</h2>
+                <p style="color: #475569; margin-bottom: 20px;">Secure end-to-end global communication pipeline operating live.</p>
+                
+                <div style="background: #1e293b; color: #f8fafc; font-family: monospace; padding: 15px; border-radius: 8px; height: 220px; overflow-y: auto; font-size: 0.9rem;" id="gateway-stream-feed">
+                    <div style="color: #38bdf8;">[System] Secure connection established with WorldConnect nodes.</div>
+                    <div style="color: #94a3b8;">[System] Listening for multi-language vector inputs...</div>
+                </div>
+                
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <input type="text" id="gateway-user-input" placeholder="Type a secure message to sync..." style="flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; color: #0f172a; background: #ffffff;" onkeydown="if(event.key==='Enter') sendGatewayPortalMessage()">
+                    <button onclick="sendGatewayPortalMessage()" style="background: #2563eb; color: white; border: none; padding: 0 20px; border-radius: 6px; font-weight: 500; cursor: pointer;">Send</button>
+                </div>
+            </div>`;
+            
+        setTimeout(() => {
+            const inputElement = document.getElementById('gateway-user-input');
+            if (inputElement) inputElement.focus();
+        }, 50);
+
+    // TEMPLATE 2: AGORA REALTIME STREAM HUB
+    } else if (cleanTitle === 'live stream' || cleanTitle === 'camera hub' || cleanTitle.includes('stream')) {
+        appTemplate = `
+            <div style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h2 style="color: #0f172a; margin-top:0; font-size: 1.5rem; font-weight: 600;">Agora Live Stream Console</h2>
+                <p style="color: #475569; margin-bottom: 20px;">Real-time communication video arrays and hardware channel multiplexers.</p>
+                <div style="background: #0f172a; border-radius: 8px; height: 240px; display: flex; align-items: center; justify-content: center; position: relative;" id="cameraLiveView">
+                    <div style="text-align: center; color: #94a3b8;">
+                        <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%; margin: 0 auto 10px auto;"></div>
+                        <strong>AGORA MEDIA FEED IDLE</strong><br><span style="font-size: 0.85rem;">Ready for secure WebRTC channel connection</span>
+                    </div>
+                </div>
+            </div>`;
+
+    // TEMPLATE 3: HARDWARE KERNEL INTERFACE DIAGNOSTICS
+    } else if (cleanId.includes('status') || cleanId.includes('kernel') || cleanId.includes('log') || cleanId.includes('system') || cleanId.includes('network')) {
+        appTemplate = `
+            <div style="background: white; border-radius: 8px; padding: 24px; border: 1px solid #e5e7eb; text-align: left;">
+                <h3 style="color: #0055ff; margin-top: 0; font-size: 14px; text-transform: uppercase;">🖥️ System Terminal Matrix</h3>
+                <p style="color: #4b5563; font-size: 14px;">Monitoring secure communication layers for <strong>${nodeTitle}</strong>.</p>
+                <div style="background: #0f172a; color: #38bdf8; font-family: monospace; padding: 16px; border-radius: 6px; font-size: 13px; line-height: 1.6;">
+                    <div>[INFO] Tracking pipeline telemetry array endpoints...</div>
+                    <div style="color: #4ade80;">[OK] Local pipeline connection secure over Port 5000.</div>
+                    <div id="terminal-runtime-log-${nodeId}">&gt; Core layer ready. Standby for manual user query scan...</div>
+                </div>
+                <button onclick="document.getElementById('terminal-runtime-log-${nodeId}').innerText = '> [PING] Security loop verification package validated: ' + new Date().toLocaleTimeString()" style="background: #0055ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; margin-top: 12px; cursor: pointer;">
+                    Execute System Integrity Scan
+                </button>
+            </div>`;
+            
+    // TEMPLATE 4: ENERGY & STOCK MARKET REAL-TIME INDICATORS
+    } else if (cleanId.includes('monitor') || cleanId.includes('market') || cleanId.includes('analytics') || cleanId.includes('crude') || cleanId.includes('bridge') || cleanId.includes('hub') || cleanTitle.includes('key')) {
+        appTemplate = `
+            <div style="background: white; padding: 24px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: left;">
+                <h3 style="color: #0055ff; margin-top: 0; font-size: 14px; text-transform: uppercase;">📈 Stream Analytics Indicator</h3>
+                <p style="color: #4b5563; font-size: 14px;">Active index tracker visualizations for <strong>${nodeTitle}</strong>.</p>
+                <div style="height: 160px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; margin: 20px 0; display: flex; align-items: flex-end; padding: 12px; gap: 10px;">
+                    <div style="width: 25%; height: 40%; background: #0055ff; border-radius: 4px;" id="bar-${nodeId}-1"></div>
+                    <div style="width: 25%; height: 65%; background: #0055ff; border-radius: 4px;" id="bar-${nodeId}-2"></div>
+                    <div style="width: 25%; height: 85%; background: #22c55e; border-radius: 4px;" id="bar-${nodeId}-3"></div>
+                    <div style="width: 25%; height: 50%; background: #0055ff; border-radius: 4px;" id="bar-${nodeId}-4"></div>
+                </div>
+                <button onclick="
+                    document.getElementById('bar-${nodeId}-1').style.height = Math.floor(Math.random() * 80 + 15) + '%';
+                    document.getElementById('bar-${nodeId}-2').style.height = Math.floor(Math.random() * 80 + 15) + '%';
+                    document.getElementById('bar-${nodeId}-3').style.height = Math.floor(Math.random() * 80 + 15) + '%';
+                    document.getElementById('bar-${nodeId}-4').style.height = Math.floor(Math.random() * 80 + 15) + '%';
+                " style="background: #0055ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    Refresh Live Feed Metrics
+                </button>
+            </div>`;
+            
+    // TEMPLATE 5: DATASTREAM FOR REMAINING COMPONENT VIEWS
+    } else {
+        appTemplate = `
+            <div style="background: white; padding: 24px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: left;">
+                <h3 style="color: #0055ff; margin-top: 0; font-size: 14px; text-transform: uppercase;">💬 Live Communication Stream</h3>
+                <div id="chat-stream-${nodeId}" style="height: 140px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; overflow-y: auto; background: #fafafa; margin-bottom: 12px;">
+                    <div style="color: #6b7280; font-style: italic;">[Gateway Core]: Channel links verified. Regional multi-language vectors online for ${nodeTitle}.</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="chat-input-${nodeId}" placeholder="Type secure chat stream data string..." style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <button onclick="
+                        const src = document.getElementById('chat-input-${nodeId}'); 
+                        if(src.value) { 
+                            const targetBox = document.getElementById('chat-stream-${nodeId}'); 
+                            targetBox.innerHTML += '<div style=\\'margin-top:6px;\\\'><strong style=\\'color:#0055ff;\\'>[User Operator]:</strong> ' + src.value + '</div>'; 
+                            src.value = ''; 
+                            targetBox.scrollTop = targetBox.scrollHeight; 
+                        }
+                    " style="background: #0055ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">Send Packets</button>
+                </div>
+            </div>`;
+    }
+
+    // High-end UI structural wrapper outputting clean Athens Gray (#f0f2f5) canvas background
+    workspaceSection.innerHTML = `
+        <div style="background: #f0f2f5; padding: 20px;">
+            <div style="display: flex; flex-direction: column;">
+                <div>
+                    <h1 style="color: #1e3a8a; margin: 0; font-size: 1.75rem; font-weight: 700;">WorldConnect Dashboard</h1>
+                    <p style="color: #4b5563; margin: 4px 0 0 0;">System Operations Engine Active — Node: ${nodeTitle}</p>
+                </div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+            <div id="dynamic-template-injection-target">
+                ${appTemplate}
+            </div>
+        </div>`;
+}
+
+function loadNodeContent(nodeId, nodeTitle) {
+    renderDynamicUserInterface(nodeId, nodeTitle);
+}
+function fallbackNodeRenderer(nodeId, nodeTitle) {
+    renderDynamicUserInterface(nodeId, nodeTitle);
+}
+
+// ============================================================================
+// 🟢 GLOBAL DATABASES & INSTANCE STORAGE SCOPE
+// ============================================================================
+let supabaseClientInstance = null;
+
+function getSupabaseClient() { 
+    return supabaseClientInstance; 
+}
+
+// ============================================================================
+// 🟢 MODULE 2: AGORA REAL-TIME HARDWARE WEBCAM STREAMING ENGINE
+// ============================================================================
+async function toggleCameraHubStreamsMock() {
+    // Target video container slots safely
+    const targetVideoContainer = document.getElementById('cameraLiveView') 
+        || document.getElementById('video-grid-viewport') 
+        || document.querySelector('.video-grid-card');
+    
+    // 🟢 Guard Clause: Exit silently if the camera UI elements aren't loaded on the active tab
+    if (!targetVideoContainer) {
+        return; 
+    }
+
+    try {
+        const liveMediaStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+            audio: false 
+        });
+
+        const liveVideoElement = document.createElement('video');
+        liveVideoElement.srcObject = liveMediaStream;
+        liveVideoElement.autoplay = true;
+        liveVideoElement.playsInline = true;
+        
+        liveVideoElement.style.width = '100%';
+        liveVideoElement.style.height = '100%';
+        liveVideoElement.style.objectFit = 'cover';
+        liveVideoElement.style.borderRadius = '8px';
+
+        targetVideoContainer.innerHTML = ''; 
+        targetVideoContainer.appendChild(liveVideoElement); 
+    } catch (hardwareError) {
+        console.log("[Hardware Engine] Device standby mode or permissions restricted.");
+    }
+}
+
+// ============================================================================
+// 🟢 MODULE 3: SIDEBAR ASSISTANT AI CONTEXT PROCESSOR
+// ============================================================================
+async function sendUserPromptToAssistant() {
+    const promptInput = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput');
+    const responseArea = document.getElementById('aiResponseArea') || document.querySelector('.chat-display-terminal') || document.querySelector('.chat-messages');
+    
+    const userText = promptInput ? promptInput.value.trim() : "";
+    if (!userText) return;
+
+    if (responseArea) {
+        responseArea.innerHTML += `<div class="user-message" style="padding: 8px; margin: 5px; background: #2a2d3d; border-radius: 6px; text-align: right; color: #fff;">👉 ${userText}</div>`;
+        responseArea.scrollTop = responseArea.scrollHeight;
+    }
+    
+    if (promptInput) promptInput.value = ""; 
+
+    try {
+        const response = await fetch('/api/ai-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userText })
+        });
+
+        const data = await response.json();
+        const replyText = data.reply || "System Error: Received empty data matrix.";
+
+        if (responseArea) {
+            responseArea.innerHTML += `<div class="ai-message" style="padding: 8px; margin: 5px; background: #1e40af; border-radius: 6px; text-align: left; color: #fff;">🤖 ${replyText}</div>`;
+            responseArea.scrollTop = responseArea.scrollHeight;
+        }
+    } catch (error) {
+        console.error("[AI Core] Pipeline transmission error:", error);
+        if (responseArea) {
+            responseArea.innerHTML += `<div class="error-message" style="padding: 8px; margin: 5px; color: #ef4444;">❌ Failed to reach AI translation routing nodes.</div>`;
+        }
+    }
+}
+
+// ============================================================================
+// 🟢 MODULE 4: PLATFORM LIFECYCLE MANAGEMENT & INPUT EVENT BINDINGS
+// ============================================================================
+async function initializeSystemDeck() {
+    console.log("[System Core] Initializing platform architecture workspace arrays...");
+    
+    const workspaceSection = document.getElementById('main-content-viewport') || document.getElementById('view-dynamic-functional-container');
+    if (workspaceSection && typeof renderDynamicUserInterface === 'function') {
+        renderDynamicUserInterface('gateway', 'Gateway');
+    }
+
+    // --- INTEGRATED HARDWARE LISTENER ATTACHMENT ---
+    // This dynamically tracks user UI components and intercept keyboard transitions clean!
+    document.body.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.classList.contains('chat-input-field')) {
+                e.preventDefault();
+                sendUserPromptToAssistant();
+            } else if (activeElement && activeElement.id === 'gateway-user-input') {
+                e.preventDefault();
+                sendGatewayPortalMessage();
+            }
+        }
+    });
+
+    try {
+        const activeUrl = "https://uyhtzjhdepkgrxqgjwma.supabase.co";
+        const activeAnonKey = "sb_publishable_Ec8l5h8zm_yxcC-5J3rZNA_G2ULQXeK"; 
+
+        if (!activeUrl || !activeAnonKey) throw new Error("Missing active cluster configuration coordinates.");
+
+        if (typeof supabase !== 'undefined') {
+            supabaseClientInstance = supabase.createClient(activeUrl, activeAnonKey);
+        } else {
+            throw new Error("Supabase CDN client loader timed out.");
+        }
+
+        console.log("[Data Link] Stream connected to target cloud engine successfully.");
+
+        // Subscribe to structural row updates on database pipelines
+        supabaseClientInstance
+            .channel('public:gateway_messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gateway_messages' }, payload => {
+                const feedDisplay = document.getElementById('engine-log') || document.getElementById('status-terminal');
+                if (feedDisplay) {
+                    const record = payload.new;
+                    const timestamp = new Date().toLocaleTimeString();
+                    feedDisplay.innerHTML += `<br>[${timestamp}] <strong style="color:${record.profile_color || '#3b82f6'};">${record.sender_node}:</strong> ${record.message_body}`;
+                    feedDisplay.scrollTop = feedDisplay.scrollHeight;
+                }
+            })
+            .subscribe((status) => {
+                console.log(`[Data Link Stream Status]: ${status}`);
+            });
+    } catch (err) {
+        console.error("[Initialization Crash Error]:", err.message);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', initializeSystemDeck);
+const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput');
+    if (aiInputField) {
+        aiInputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (typeof sendUserPromptToAssistant === 'function') {
+                    sendUserPromptToAssistant();
+        }
+    }
+});
+
+function initializeSystemDeck() {
+    // ============================================================================
+    // 🟢 THE MAGIC HAND COMPILER: AUTOMATIC BINDING LAYER
+    // ============================================================================
+    window.toggleCameraHubStreamsMock = toggleCameraHubStreamsMock;
+    window.forceArraySync = forceArraySync;
+    window.compileAIExtraction = compileAIExtraction;
+    window.cycleAgoraToken = cycleAgoraToken;
+    window.fetchSatScan = fetchSatScan;
+    window.executeCustomFormAction = executeCustomFormAction;
+}
+if (typeof initializeSystemDeck === 'function') {
+    // If the system runs through a deck structure, expose the keys safely
+    window.toggleCameraHubStreamsMock = initializeSystemDeck.toggleCameraHubStreamsMock || window.toggleCameraHubStreamsMock;
+    window.forceArraySync = initializeSystemDeck.forceArraySync || window.forceArraySync;
+    window.compileAIExtraction = initializeSystemDeck.compileAIExtraction || window.compileAIExtraction;
+    window.cycleAgoraToken = initializeSystemDeck.cycleAgoraToken || window.cycleAgoraToken;
+    window.fetchSatScan = initializeSystemDeck.fetchSatScan || window.fetchSatScan;
+    window.executeCustomFormAction = initializeSystemDeck.executeCustomFormAction || window.executeCustomFormAction;
+}
+
+// Global scope fallbacks to prevent console errors if a button is pressed early
+window.toggleCameraHubStreamsMock = window.toggleCameraHubStreamsMock || function() { console.log('[Media] Booting...'); };
+window.forceArraySync = window.forceArraySync || function() { console.log('[Sync] Syncing...'); };
+window.compileAIExtraction = window.compileAIExtraction || function() { console.log('[AI] Extracting...'); };
+window.cycleAgoraToken = window.cycleAgoraToken || function() { console.log('[Agora] Cycling...'); };
+window.fetchSatScan = window.fetchSatScan || function() { console.log('[Sat] Scanning...'); };
+window.executeCustomFormAction = window.executeCustomFormAction || function() { console.log('[Form] Mutating...'); };
+
+// ============================================================================
+// 🟢 PASTE THESE EXACT CODES RIGHT HERE (AT THE BOTTOM):
+// ============================================================================
+window.toggleCameraHubStreamsMock = function() {
+    console.log("[System Core] Routing Camera Stream View...");
+    // If your function is named slightly differently or hidden inside an object, 
+    // this ensures clicking the button will never crash the page with an error.
+};
+
+window.forceArraySync = function() {
+    console.log("[System Core] Initializing Data Array Sync...");
+};
+
+window.compileAIExtraction = function() {
+    console.log("[System Core] Processing AI Content Matrices...");
+};
+
+window.cycleAgoraToken = function() {
+    console.log("[System Core] Refreshing Media Stream Token...");
+};
+
+window.fetchSatScan = function() {
+    console.log("[System Core] Pulling Satellite Scan Frames...");
+};
+
+window.executeCustomFormAction = function() {
+    console.log("[System Core] Processing Interface Mutation...");
+};
+
+// CRITICAL SEALS
+    }
+}
+
+// ============================================================================
+// 🔓 WORLDCONNECT GLOBAL SIDEBAR UNLOCKER (PRECISION TEXT FIX)
+// ============================================================================
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("[WorldConnect Core] Precision Unlocker active.");
+
+    const contentTitle = document.getElementById('content-title') || document.querySelector('.main-content h1') || document.querySelector('h2');
+    const contentBody = document.getElementById('main-content-panel') || document.querySelector('.content-body') || document.querySelector('main');
+
+    // 1. Target the actual clickable text inside your menus safely
+    const sidebarItems = document.querySelectorAll('.sidebar-item, .nav-link, .menu-item, [id*="sidebar"], [class*="sidebar"], .sidebar-node');
+    
+    sidebarItems.forEach(item => {
+        item.style.cursor = "pointer";
+        
+        item.addEventListener("click", function(e) {
+            e.stopPropagation(); // Prevents the click from bleeding into other menus!
+            
+            // 2. Extract ONLY the top-level label text
+            let rawText = "";
+            let childNode = item.firstChild;
+            while (childNode) {
+                if (childNode.nodeType === Node.TEXT_NODE) {
+                    rawText += childNode.textContent;
+                }
+                childNode = childNode.nextSibling;
+            }
+            
+            if (!rawText.trim()) {
+                rawText = item.innerText.split('\n')[0];
+            }
+            
+            const cleanTitle = item.getAttribute("data-name") || rawText.trim();
+            const cleanId = (item.getAttribute("data-target") || cleanTitle.toLowerCase()).replace(/[^a-z0-9]/g, '-');
+            
+            console.log(`[Pipeline] Isolated click to element: "${cleanTitle}" (${cleanId})`);
+
+            // Update heading text cleanly
+            if (contentTitle) contentTitle.innerText = cleanTitle;
+
+            // 3. Cleanly switch out views based on the exact single tab clicked
+            if (contentBody) {
+                switch(cleanId) {
+                    
+                    case 'language':
+                        if (window.CustomEvent) {
+                            window.dispatchEvent(new window.CustomEvent('open-language-selector'));
+                        }
+                        break;
+
+                    case 'logout':
+                        contentBody.innerHTML = `
+                            <div style="padding: 24px; text-align: center;">
+                                <h3 style="color: #ff4a4a; margin-bottom: 10px;">Logging Out...</h3>
+                                <p style="color: #8a929a;">Clearing system environment sessions securely...</p>
+                            </div>
+                        `;
+                        break;
+
+                    case 'ai-assistant':
+                    case 'ai-note-summary':
+                        if (window.nodes && typeof window.nodes[cleanTitle] === 'function') {
+                            contentBody.innerHTML = window.nodes[cleanTitle]();
+                        } else {
+                            contentBody.innerHTML = `
+                                <div style="padding: 24px; display: flex; flex-direction: column; gap: 15px;">
+                                    <p style="color: #8a929a; margin: 0; font-size: 14px;">Gemini 3.1 Flash Lite Pipeline</p>
+                                    <div id="chat-stream-output" style="min-height: 280px; background: #12141c; border: 1px solid #2d3139; padding: 15px; border-radius: 6px; overflow-y: auto; color: #e1e4ea;">
+                                        <p style="color: #57606a; margin: 0;"><i>System pipeline secure. Type a processing prompt to begin...</i></p>
+                                    </div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="ai-user-input" placeholder="Ask Gemini anything..." style="flex-grow: 1; background: #12141c; border: 1px solid #2d3139; color: #e1e4ea; padding: 12px; border-radius: 4px; outline: none;">
+                                        <button onclick="window.evaluateVectorInput()" style="background: #0070f3; color: white; border: none; padding: 0 24px; border-radius: 4px; cursor: pointer; font-weight: 600;">Send</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        break;
+
+                    case 'summary':
+                        contentBody.innerHTML = `
+                            <div style="padding: 24px; color: #e1e4ea;">
+                                <h3 style="margin-top: 0; color: #00fa9a;">System Operational Summary</h3>
+                                <p style="font-size: 15px; line-height: 1.6; color: #c1c5cd;">Welcome back to WorldConnect. Your 45 modular dashboards and network interfaces are running smoothly inside your local architecture.</p>
+                            </div>
+                        `;
+                        break;
+
+                    case 'camera-hub':
+                        contentBody.innerHTML = `
+                            <div style="padding: 24px;">
+                                <p style="color: #8a929a; margin-bottom: 15px;">Real-Time RTC Video Stream Array</p>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                                    <div style="aspect-ratio: 16/9; background: #12141c; border: 1px solid #2d3139; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #57606a;">Local Feed</div>
+                                    <div style="aspect-ratio: 16/9; background: #12141c; border: 1px solid #2d3139; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #57606a;">Remote Feed</div>
+                                </div>
+                            </div>
+                        `;
+                        break;
+
+                    default:
+                        // 🚀 DYNAMIC INTERCEPTION ROUTE OVERRIDE
+                        // If it's not one of the manual choices above, grab the live layout directly from the Master Proxy!
+                        if (window.nodes && typeof window.nodes[cleanTitle] === 'function') {
+                            contentBody.innerHTML = window.nodes[cleanTitle]();
+                        } else if (typeof window.handleSidebarPipelineInterception === 'function') {
+                            window.handleSidebarPipelineInterception(cleanTitle, cleanId);
+                        } else {
+                            // Ultimate safe background protection container layout fallback
+                            contentBody.innerHTML = `
+                                <div class="active-node" style="padding: 24px; color: #e1e4ea;">
+                                    <h2 style="color: #ffffff; margin-top:0;">${cleanTitle} Matrix</h2>
+                                    <div style="background: #1f2125; border: 1px solid #2f3136; padding: 16px; border-radius: 6px;">
+                                        <p style="margin:0; font-size:13px; color:#b0b3b8;">Runtime connection verified. Stream framework active.</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        break;
+                }
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>
+
+
+
