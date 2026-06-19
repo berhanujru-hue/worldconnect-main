@@ -481,6 +481,20 @@ controlDeck.innerHTML = `
 document.body.appendChild(controlDeck);
 
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
+// Setup layout control deck container if it doesn't exist
+let controlDeck = document.getElementById('layout-toggle-wrapper');
+if (!controlDeck) {
+  controlDeck = document.createElement('div');
+  controlDeck.id = 'layout-toggle-wrapper';
+  controlDeck.style = "position: fixed; bottom: 20px; right: 20px; display: none; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
+  controlDeck.innerHTML = `
+      <div style="font-weight: bold; margin-bottom: 8px; color: #38bdf8; font-size: 0.8rem; letter-spacing: 0.5px;">⚙️ LAYOUT TOGGLE</div>
+      <button id="toggle-admin-btn" style="background: #0284c7; color: white; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 6px; display: block;">SHOW FULL ADMIN (45 NODES)</button>
+      <button id="toggle-user-btn" style="background: #334155; color: #cbd5e1; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; display: block;">SHOW STANDARD USER VIEW</button>
+  `;
+  document.body.appendChild(controlDeck);
+}
+
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
   const mainDashboard = document.getElementById('main-dashboard');
@@ -488,14 +502,14 @@ supabase.auth.onAuthStateChange((event, session) => {
   const sidebarNavigation = document.getElementById('sidebar');
 
   if (session) {
-    // 1. Authenticated User: Hide the entrance portal, reveal full platform workspace
+    // 1. Authenticated User: Hide login card, reveal the core workspace layouts
     if (authContainer) authContainer.style.display = 'none';
     if (mainDashboard) mainDashboard.style.display = 'block';
     if (workspaceContainer) workspaceContainer.style.display = 'block';
     if (sidebarNavigation) sidebarNavigation.style.display = 'block';
-    controlDeck.style.display = 'block'; // Safely reveals the control switch panel
+    if (controlDeck) controlDeck.style.display = 'block';
 
-    // Run your sidebar item interaction binders exactly once per active session
+    // Initialize sidebar interaction pathways safely
     if (!window.navigationBound) {
       console.log("[System Core] Binding navigation pipelines to sidebar lists...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
@@ -516,7 +530,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         });
       });
 
-      // Handle text entry submissions for your terminal fields
+      // Bind text query submit elements
       const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
       if (aiInputField) {
         aiInputField.addEventListener('keydown', (e) => {
@@ -528,18 +542,16 @@ supabase.auth.onAuthStateChange((event, session) => {
           }
         });
       }
-
-      console.log("[System Sync] Core infrastructure channels cleanly generated and ready.");
       window.navigationBound = true;
     }
 
   } else {
-    // 2. Unauthenticated Visitor: Mask the dashboard workspace completely from viewport view
+    // 2. Unauthenticated Visitor: Mask layout structures and show login gate
     if (authContainer) authContainer.style.display = 'block';
     if (mainDashboard) mainDashboard.style.display = 'none';
     if (workspaceContainer) workspaceContainer.style.display = 'none';
     if (sidebarNavigation) sidebarNavigation.style.display = 'none';
-    controlDeck.style.display = 'none'; // Completely locks out layout toggles from guests
+    if (controlDeck) controlDeck.style.display = 'none';
     
     window.navigationBound = false;
   }
