@@ -543,3 +543,27 @@ async function handleSubscription() {
     messageText.innerText = 'Network error. Please try again.';
   }
 }
+
+// Safe execution block at the bottom of public/js/nodes/system.js
+const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+
+if (forgotPasswordBtn) {
+  forgotPasswordBtn.addEventListener('click', async () => {
+    const email = document.getElementById('user-identifier').value;
+    
+    if (!email) {
+      alert('Please enter your email address first.');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
+    });
+
+    if (error) {
+      alert('Error: ' + error.message);
+    } else {
+      alert('Password reset link sent to your email!');
+    }
+  });
+}

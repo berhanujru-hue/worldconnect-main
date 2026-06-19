@@ -483,10 +483,61 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .btn-signup { background: var(--secondary); }
+        .btn-login { background: var(--primary); }
+        button:active { transform: scale(0.97); }
+        
+        .forgot-password-container {
+            width: 100%;
+            text-align: right;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+        .forgot-password-link {
+            font-size: 14px;
+            color: #64748b;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .forgot-password-link:hover {
+            color: var(--primary);
+        }
+        
+        .toggle-text { margin-top: 20px; font-size: 15px; color: #64748b; }
+        .toggle-text span { color: var(--primary); font-weight: bold; cursor: pointer; }
+    
     </style>
 </head>
 <body>
 
+  <div id="auth-container" style="display: none;">
+      <div class="app-shell">
+          <div class="container">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png" class="logo" alt="World Logo">
+              
+              <h1>worldconnect</h1>
+              <p class="tagline">Universal AI & Video Super-App</p>
+
+              <input type="text" id="user-identifier" placeholder="Email or Phone Number">
+              <input type="password" id="password" placeholder="Password">
+
+              <div class="forgot-password-container">
+                  <span id="forgot-password-btn" class="forgot-password-link">Forgot password?</span>
+              </div>
+
+              <div class="btn-group">
+                  <button id="submit-btn" class="btn-signup">Sign Up</button>
+              </div>
+
+              <p class="toggle-text" id="toggle-mode">Already have an account? <span>Login</span></p>
+          </div>
+      </div>
+  </div>
+
+  <div id="main-dashboard">
+      
     <aside id="sidebar">
         <div class="sidebar-brand-wrapper">
             <div class="sidebar-logo-globe-container"></div>
