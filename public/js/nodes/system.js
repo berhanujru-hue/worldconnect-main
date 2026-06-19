@@ -486,11 +486,7 @@ It uses fallback checks so that whether your login element uses a `class` or an 
 (function() {
   console.log("[System Core] Initializing independent Auth Gating Layer...");
 
-  // Securely find the correct database client instance regardless of code capitalization
-  const databaseClient = window.supabase || window.SUPABASE;
-
   function handleLayoutVisibility(session) {
-    // Flexible structural selectors: checks custom IDs first, falls back gracefully to template wrappers
     const authContainer = document.getElementById('auth-container') || document.querySelector('.app-shell') || document.querySelector('.auth-container');
     const mainDashboard = document.getElementById('main-dashboard');
     const workspaceContainer = document.getElementById('workspace-container');
@@ -534,26 +530,41 @@ It uses fallback checks so that whether your login element uses a `class` or an 
     }
   }
 
-  // Safe run context to block external exceptions from pausing execution flow
-  try {
+  // New Polling Mechanism: Wait up to 5 seconds for Supabase script tags to load asynchronously
+  let attempts = 0;
+  const initAuth = () => {
+    const databaseClient = window.supabase || window.SUPABASE;
+    
     if (databaseClient && databaseClient.auth) {
-      // Run immediate initial check on load
-      databaseClient.auth.getSession().then(({ data: { session } }) => {
-        handleLayoutVisibility(session);
-      }).catch(err => console.error("[Auth Gateway] Initial storage check error:", err));
+      console.log("[Auth Gateway] Supabase globally bound successfully.");
+      try {
+        // Run initial check
+        databaseClient.auth.getSession().then(({ data: { session } }) => {
+          handleLayoutVisibility(session);
+        }).catch(err => console.error("[Auth Gateway] Storage check error:", err));
 
-      // Listen for runtime status updates (logins, sign-outs, cookie refreshes)
-      databaseClient.auth.onAuthStateChange((event, session) => {
-        console.log("[Auth Gateway] State update triggered:", event);
-        handleLayoutVisibility(session);
-      });
+        // Listen for runtime updates
+        databaseClient.auth.onAuthStateChange((event, session) => {
+          console.log("[Auth Gateway] State update triggered:", event);
+          handleLayoutVisibility(session);
+        });
+      } catch (err) {
+        console.error("[Auth Gateway] Initialization crash averted:", err);
+      }
+    } else if (attempts < 50) {
+      attempts++;
+      setTimeout(initAuth, 100); // Retry every 100ms
     } else {
-      console.warn("[Auth Gateway] Warning: Supabase client reference unavailable on loading sequence.");
-      handleLayoutVisibility(null);
+      console.error("[Auth Gateway] Fatal: Supabase script failed to load within timeout window.");
+      handleLayoutVisibility(null); // Fallback to login screen
     }
-  } catch (fatalError) {
-    console.error("[Auth Gateway] Gating safety catch activated:", fatalError);
-    handleLayoutVisibility(null);
+  };
+
+  // Start polling
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initAuth();
+  } else {
+    window.addEventListener('DOMContentLoaded', initAuth);
   }
 })();
 
@@ -562,8 +573,8 @@ const forgotPasswordBtn = document.getElementById('forgot-password-btn') || docu
 if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', async () => {
     const databaseClient = window.supabase || window.SUPABASE;
-    if (!databaseClient) {
-      alert("Database configuration missing.");
+    if (!databaseClient || !databaseClient.auth) {
+      alert("Database configuration is still loading. Please try again in a moment.");
       return;
     }
     
