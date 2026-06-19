@@ -471,30 +471,18 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
-
-  // Unified function to safely toggle dashboard layout structures
-  const toggleDashboardVisibility = (visible) => {
-    const displayValue = visible ? 'block' : 'none';
-    
-    // Target all possible selectors where your dynamic 45-node workspace compiles
-    const targets = [
-      document.getElementById('main-dashboard'),
-      document.querySelector('.functional-grid'),
-      document.querySelector('main'),
-      document.querySelector('aside')
-    ];
-
-    targets.forEach(element => {
-      if (element) {
-        element.style.setProperty('display', displayValue, visible ? '' : 'important');
-      }
-    });
-  };
+  
+  // These match your EXACT HTML structure IDs perfectly now
+  const mainDashboard = document.getElementById('main-dashboard');
+  const workspaceContainer = document.getElementById('workspace-container');
+  const sidebarNavigation = document.getElementById('sidebar');
 
   if (session) {
-    // 1. Authenticated User: Hide login card, display platform workspace safely
+    // 1. Authenticated User: Hide login card, reveal the entire application shell layout
     if (authContainer) authContainer.style.display = 'none';
-    toggleDashboardVisibility(true);
+    if (mainDashboard) mainDashboard.style.display = 'block';
+    if (workspaceContainer) workspaceContainer.style.display = 'block';
+    if (sidebarNavigation) sidebarNavigation.style.display = 'block';
 
     // Initialize sidebar navigation pipelines exactly once per authenticated runtime
     if (!window.navigationBound) {
@@ -537,9 +525,11 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. Unauthenticated Guest: Block the viewport with the auth panel, ensure dashboard stays invisible
+    // 2. Unauthenticated Guest: Block the viewport with the auth panel, keep dashboard invisible
     if (authContainer) authContainer.style.display = 'block';
-    toggleDashboardVisibility(false);
+    if (mainDashboard) mainDashboard.style.display = 'none';
+    if (workspaceContainer) workspaceContainer.style.display = 'none';
+    if (sidebarNavigation) sidebarNavigation.style.display = 'none';
     
     window.navigationBound = false;
   }
