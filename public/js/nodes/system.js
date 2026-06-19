@@ -468,25 +468,34 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
     window.fetchSatScan = function() { console.log('[Sat] Telemetry logs scanned.'); };
     window.executeCustomFormAction = function() { console.log('[Form] Fallback records mutated.'); };
 
+// === 4. CONTROL DECK GENERATION LAYER ===
+// Create and inject the Layout Toggle container directly via JavaScript
+const controlDeck = document.createElement('div');
+controlDeck.id = 'layout-toggle-wrapper';
+controlDeck.style = "position: fixed; bottom: 20px; right: 20px; display: none; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
+controlDeck.innerHTML = `
+    <div style="font-weight: bold; margin-bottom: 8px; color: #38bdf8; font-size: 0.8rem; letter-spacing: 0.5px;">⚙️ LAYOUT TOGGLE</div>
+    <button id="toggle-admin-btn" style="background: #0284c7; color: white; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 6px; display: block;">SHOW FULL ADMIN (45 NODES)</button>
+    <button id="toggle-user-btn" style="background: #334155; color: #cbd5e1; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; display: block;">SHOW STANDARD USER VIEW</button>
+`;
+document.body.appendChild(controlDeck);
+
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
-  
-  // Explicitly mapping all your core layout frameworks
   const mainDashboard = document.getElementById('main-dashboard');
   const workspaceContainer = document.getElementById('workspace-container');
   const sidebarNavigation = document.getElementById('sidebar');
-  const layoutToggleWrapper = document.getElementById('layout-toggle-wrapper') || document.querySelector('.layout-toggle-container');
 
   if (session) {
-    // 1. Authenticated Access: Reveal your operational maps and user controls
+    // 1. Authenticated User: Hide the entrance portal, reveal full platform workspace
     if (authContainer) authContainer.style.display = 'none';
     if (mainDashboard) mainDashboard.style.display = 'block';
     if (workspaceContainer) workspaceContainer.style.display = 'block';
     if (sidebarNavigation) sidebarNavigation.style.display = 'block';
-    if (layoutToggleWrapper) layoutToggleWrapper.style.display = 'block'; // Turn it on safely here
+    controlDeck.style.display = 'block'; // Safely reveals the control switch panel
 
-    // Bind sidebar navigation pathways exactly once per runtime context
+    // Run your sidebar item interaction binders exactly once per active session
     if (!window.navigationBound) {
       console.log("[System Core] Binding navigation pipelines to sidebar lists...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
@@ -495,7 +504,6 @@ supabase.auth.onAuthStateChange((event, session) => {
         btn.style.cursor = "pointer";
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
-          
           let name = this.innerText.trim().split('\n')[0];
           let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
           
@@ -508,7 +516,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         });
       });
 
-      // Intercept execution pathways for main prompt areas
+      // Handle text entry submissions for your terminal fields
       const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
       if (aiInputField) {
         aiInputField.addEventListener('keydown', (e) => {
@@ -526,13 +534,38 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. Unauthenticated Gate: Fully secure ecosystem structures from view instantly
+    // 2. Unauthenticated Visitor: Mask the dashboard workspace completely from viewport view
     if (authContainer) authContainer.style.display = 'block';
     if (mainDashboard) mainDashboard.style.display = 'none';
     if (workspaceContainer) workspaceContainer.style.display = 'none';
     if (sidebarNavigation) sidebarNavigation.style.display = 'none';
-    if (layoutToggleWrapper) layoutToggleWrapper.style.display = 'none'; // Lock out toggle panel layout completely
+    controlDeck.style.display = 'none'; // Completely locks out layout toggles from guests
     
     window.navigationBound = false;
   }
 });
+
+// === 6. SECURE FORGOT PASSWORD ACTION ===
+const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+if (forgotPasswordBtn) {
+  forgotPasswordBtn.addEventListener('click', async () => {
+    const emailField = document.getElementById('user-identifier');
+    if (!emailField) return;
+    
+    const email = emailField.value.trim();
+    if (!email) {
+      alert('Please enter your email address first.');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
+    });
+
+    if (error) {
+      alert('Error: ' + error.message);
+    } else {
+      alert('Password reset link sent to your email!');
+    }
+  });
+}
