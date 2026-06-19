@@ -468,69 +468,79 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
     window.fetchSatScan = function() { console.log('[Sat] Telemetry logs scanned.'); };
     window.executeCustomFormAction = function() { console.log('[Form] Fallback records mutated.'); };
 
-// 🔄 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER
+// === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
-  const mainAppLayout = document.querySelector('.app-shell'); 
+  
+  // High-reliability structural selectors to target your active platform interface layouts
+  const platformGrid = document.querySelector('.functional-grid') || document.querySelector('main') || document.getElementById('main-dashboard');
+  const sidebarNavigation = document.querySelector('aside');
 
   if (session) {
+    // 1. Authenticated State: Reveal workspace components and hide the authorization container
     if (authContainer) authContainer.style.display = 'none';
-    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'block';
+    if (platformGrid) platformGrid.style.display = 'block';
+    if (sidebarNavigation) sidebarNavigation.style.display = 'block';
 
-    // This is where your original code starts right below it:
-    window.addEventListener('DOMContentLoaded', () => {
-        console.log("[System Deck] DOM fully loaded...");
-
-        // --- NEW AUTO-CLICK BINDING CODE FOR SIDEBAR NODES ---
-    window.addEventListener('DOMContentLoaded', () => {
-        console.log("[System Deck] DOM fully loaded. Mounting chat stream listeners...");
-        
-        // --- NEW AUTO-CLICK BINDING CODE FOR SIDEBAR NODES ---
-        console.log("[System Core] Binding navigation pipelines to sidebar lists...");
-        const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-        
-        sidebarButtons.forEach(btn => {
-            btn.style.cursor = "pointer"; // Add pointer indicator visually
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // Track standard node text contents
-                let name = this.innerText.trim().split('\n')[0]; // strip badges
-                let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-                
-                // Clear any lingering active states and mark this button as chosen
-                sidebarButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Route viewport instantly
-                window.handleSidebarPipelineInterception(name, id);
-            });
+    // Initialize core structural binders safely exactly once per authenticated runtime
+    if (!window.navigationBound) {
+      console.log("[System Core] Binding navigation pipelines to sidebar lists...");
+      const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
+      
+      sidebarButtons.forEach(btn => {
+        btn.style.cursor = "pointer";
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          
+          let name = this.innerText.trim().split('\n')[0]; // Strip out badges cleanly
+          let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
+          
+          sidebarButtons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          if (typeof window.handleSidebarPipelineInterception === 'function') {
+            window.handleSidebarPipelineInterception(name, id);
+          }
         });
-        // -----------------------------------------------------
+      });
 
-        const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
-        if (aiInputField) {
-            aiInputField.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (typeof window.evaluateVectorInput === 'function') {
-                        window.evaluateVectorInput();
-                    }
-                }
-            });
-            console.log("[System Deck] Text stream enter-key interceptor active.");
-        }
-    });
+      // Bind input listeners for core text routing arrays
+      const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
+      if (aiInputField) {
+        aiInputField.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (typeof window.evaluateVectorInput === 'function') {
+              window.evaluateVectorInput();
+            }
+          }
+        });
+        console.log("[System Deck] Text stream enter-key interceptor active.");
+      }
 
-    console.log("[System Sync] Core infrastructure channels cleanly generated and ready.");
-})();
+      console.log("[System Sync] Core infrastructure channels cleanly generated and ready.");
+      window.navigationBound = true;
+    }
 
+  } else {
+    // 2. Unauthenticated State: Fully shield system dashboards and pop open the entry portal
+    if (authContainer) authContainer.style.display = 'block';
+    if (platformGrid) platformGrid.style.display = 'none';
+    if (sidebarNavigation) sidebarNavigation.style.display = 'none';
+    
+    window.navigationBound = false;
+  }
+});
+
+// === 6. SUBSCRIPTION INFRASTRUCTURE MANAGEMENT ===
 async function handleSubscription() {
   const emailInput = document.getElementById('subscriberEmail');
   const messageText = document.getElementById('subscriptionMessage');
+  
+  if (!emailInput || !messageText) return;
   const email = emailInput.value.trim();
 
-  if(!email) return;
+  if (!email) return;
 
   try {
     const response = await fetch('/api/subscribe', {
@@ -545,7 +555,7 @@ async function handleSubscription() {
     if (response.ok) {
       messageText.style.color = 'green';
       messageText.innerText = result.message;
-      emailInput.value = ''; // Clears the input box on success
+      emailInput.value = ''; 
     } else {
       messageText.style.color = 'red';
       messageText.innerText = result.error;
@@ -557,13 +567,14 @@ async function handleSubscription() {
   }
 }
 
-// Safe execution block at the bottom of public/js/nodes/system.js
+// === 7. SECURE FORGOT PASSWORD ACTION ===
 const forgotPasswordBtn = document.getElementById('forgot-password-btn');
-
 if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', async () => {
-    const email = document.getElementById('user-identifier').value;
+    const emailField = document.getElementById('user-identifier');
+    if (!emailField) return;
     
+    const email = emailField.value.trim();
     if (!email) {
       alert('Please enter your email address first.');
       return;
@@ -580,42 +591,3 @@ if (forgotPasswordBtn) {
     }
   });
 }
-
-// Automatically hide the dashboard and show the login card for unauthenticated visitors
-supabase.auth.onAuthStateChange((event, session) => {
-  const mainDashboard = document.getElementById('main-dashboard');
-  const authContainer = document.getElementById('auth-container');
-
-if (session) {
-    // User is logged in: Show the workspace, keep login screen hidden
-    if (authContainer) authContainer.style.display = 'none';
-    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'block';
-  } else {
-    // No active user session: Hide the dashboard, show the login interface
-    if (authContainer) authContainer.style.display = 'block';
-    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'none';
-  }
-}); // Closes supabase.auth.onAuthStateChange
-
-// === 6. SECURE FORGOT PASSWORD ACTION ===
-const forgotPasswordBtn = document.getElementById('forgot-password-btn');
-if (forgotPasswordBtn) {
-  forgotPasswordBtn.addEventListener('click', async () => {
-    const email = document.getElementById('user-identifier').value;
-    
-    if (!email) {
-      alert('Please enter your email address first.');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
-    });
-
-    if (error) {
-      alert('Error: ' + error.message);
-    } else {
-      alert('Password reset link sent to your email!');
-    }
-  }); // Closes addEventListener
-} // Closes if (forgotPasswordBtn)
