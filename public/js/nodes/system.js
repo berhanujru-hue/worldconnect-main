@@ -471,18 +471,32 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
-  
-  // High-reliability structural selectors to target your active platform interface layouts
-  const platformGrid = document.querySelector('.functional-grid') || document.querySelector('main') || document.getElementById('main-dashboard');
-  const sidebarNavigation = document.querySelector('aside');
+
+  // Unified function to safely toggle dashboard layout structures
+  const toggleDashboardVisibility = (visible) => {
+    const displayValue = visible ? 'block' : 'none';
+    
+    // Target all possible selectors where your dynamic 45-node workspace compiles
+    const targets = [
+      document.getElementById('main-dashboard'),
+      document.querySelector('.functional-grid'),
+      document.querySelector('main'),
+      document.querySelector('aside')
+    ];
+
+    targets.forEach(element => {
+      if (element) {
+        element.style.setProperty('display', displayValue, visible ? '' : 'important');
+      }
+    });
+  };
 
   if (session) {
-    // 1. Authenticated State: Reveal workspace components and hide the authorization container
+    // 1. Authenticated User: Hide login card, display platform workspace safely
     if (authContainer) authContainer.style.display = 'none';
-    if (platformGrid) platformGrid.style.display = 'block';
-    if (sidebarNavigation) sidebarNavigation.style.display = 'block';
+    toggleDashboardVisibility(true);
 
-    // Initialize core structural binders safely exactly once per authenticated runtime
+    // Initialize sidebar navigation pipelines exactly once per authenticated runtime
     if (!window.navigationBound) {
       console.log("[System Core] Binding navigation pipelines to sidebar lists...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
@@ -504,7 +518,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         });
       });
 
-      // Bind input listeners for core text routing arrays
+      // Bind text input streams
       const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
       if (aiInputField) {
         aiInputField.addEventListener('keydown', (e) => {
@@ -523,10 +537,9 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. Unauthenticated State: Fully shield system dashboards and pop open the entry portal
+    // 2. Unauthenticated Guest: Block the viewport with the auth panel, ensure dashboard stays invisible
     if (authContainer) authContainer.style.display = 'block';
-    if (platformGrid) platformGrid.style.display = 'none';
-    if (sidebarNavigation) sidebarNavigation.style.display = 'none';
+    toggleDashboardVisibility(false);
     
     window.navigationBound = false;
   }
@@ -539,7 +552,6 @@ async function handleSubscription() {
   
   if (!emailInput || !messageText) return;
   const email = emailInput.value.trim();
-
   if (!email) return;
 
   try {
