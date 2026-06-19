@@ -480,8 +480,21 @@ controlDeck.innerHTML = `
 `;
 document.body.appendChild(controlDeck);
 
+<div class="auth-container"> ```
+
+Because your HTML has `style="display: none;"` on the dashboard now, it will hide on page load. To make sure the script safely finds and shows your login block instead of leaving a blank page or getting stuck, let's update **Section 5** one last time to be completely flexible.
+
+---
+
+### 🛠️ The Adaptive Section 5 Code
+
+Replace everything from **`// === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===`** to the very bottom of your `public/js/nodes/system.js` file with this version. 
+
+It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
+
+```javascript
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
-// Setup layout control deck container if it doesn't exist
+// Setup layout control deck container if it doesn't exist yet
 let controlDeck = document.getElementById('layout-toggle-wrapper');
 if (!controlDeck) {
   controlDeck = document.createElement('div');
@@ -496,22 +509,23 @@ if (!controlDeck) {
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
-  const authContainer = document.getElementById('auth-container');
+  // Flexible selector: finds the login container whether it uses id="auth-container" or class="auth-container"
+  const authContainer = document.getElementById('auth-container') || document.querySelector('.auth-container') || document.querySelector('[class*="auth"]');
   const mainDashboard = document.getElementById('main-dashboard');
   const workspaceContainer = document.getElementById('workspace-container');
   const sidebarNavigation = document.getElementById('sidebar');
 
   if (session) {
-    // 1. Authenticated User: Hide login card, reveal the core workspace layouts
+    // 1. User logged in: Hide the login block, show the workspace
     if (authContainer) authContainer.style.display = 'none';
     if (mainDashboard) mainDashboard.style.display = 'block';
     if (workspaceContainer) workspaceContainer.style.display = 'block';
     if (sidebarNavigation) sidebarNavigation.style.display = 'block';
     if (controlDeck) controlDeck.style.display = 'block';
 
-    // Initialize sidebar interaction pathways safely
+    // Bind sidebar clicks
     if (!window.navigationBound) {
-      console.log("[System Core] Binding navigation pipelines to sidebar lists...");
+      console.log("[System Core] Binding navigation pipelines...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
       
       sidebarButtons.forEach(btn => {
@@ -529,24 +543,11 @@ supabase.auth.onAuthStateChange((event, session) => {
           }
         });
       });
-
-      // Bind text query submit elements
-      const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
-      if (aiInputField) {
-        aiInputField.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (typeof window.evaluateVectorInput === 'function') {
-              window.evaluateVectorInput();
-            }
-          }
-        });
-      }
       window.navigationBound = true;
     }
 
   } else {
-    // 2. Unauthenticated Visitor: Mask layout structures and show login gate
+    // 2. No session / Logged out: Show login block, hide workspace elements safely
     if (authContainer) authContainer.style.display = 'block';
     if (mainDashboard) mainDashboard.style.display = 'none';
     if (workspaceContainer) workspaceContainer.style.display = 'none';
