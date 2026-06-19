@@ -567,3 +567,19 @@ if (forgotPasswordBtn) {
     }
   });
 }
+
+// Automatically hide the dashboard and show the login card for unauthenticated visitors
+supabase.auth.onAuthStateChange((event, session) => {
+  const mainDashboard = document.getElementById('main-dashboard');
+  const authContainer = document.getElementById('auth-container');
+
+  if (session) {
+    // User is logged in: Show the 40-node workspace, keep login screen hidden
+    if (mainDashboard) mainDashboard.style.display = 'block';
+    if (authContainer) authContainer.style.display = 'none';
+  } else {
+    // No active user session: Hide the dashboard completely, show the login interface
+    if (mainDashboard) mainDashboard.style.display = 'none';
+    if (authContainer) authContainer.style.display = 'block';
+  }
+});
