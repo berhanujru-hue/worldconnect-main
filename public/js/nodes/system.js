@@ -484,7 +484,6 @@ It uses fallback checks so that whether your login element uses a `class` or an 
 
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
 supabase.auth.onAuthStateChange((event, session) => {
-  // Target your wrappers using the exact layout element IDs from your HTML
   const authContainer = document.getElementById('auth-container');
   const mainDashboard = document.getElementById('main-dashboard');
   const workspaceContainer = document.getElementById('workspace-container');
@@ -492,7 +491,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   const controlDeckElement = document.getElementById('layout-toggle-wrapper');
 
   if (session) {
-    // 1. User Authenticated: Clear out login forms, display core app metrics dashboard
+    // 1. Logged In: Hide the auth block, show the main dashboard panels
     if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
     if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
     if (workspaceContainer) workspaceContainer.style.display = 'block';
@@ -500,19 +499,16 @@ supabase.auth.onAuthStateChange((event, session) => {
     if (controlDeckElement) controlDeckElement.style.display = 'block';
 
     if (!window.navigationBound) {
-      console.log("[System Core] Binding navigation pipelines to sidebar lists...");
+      console.log("[System Core] Binding navigation pipelines...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-      
       sidebarButtons.forEach(btn => {
         btn.style.cursor = "pointer";
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           let name = this.innerText.trim().split('\n')[0];
           let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-          
           sidebarButtons.forEach(b => b.classList.remove('active'));
           this.classList.add('active');
-          
           if (typeof window.handleSidebarPipelineInterception === 'function') {
             window.handleSidebarPipelineInterception(name, id);
           }
@@ -522,7 +518,7 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. Guest/Logged Out: Pull login forms into view, block layout metrics
+    // 2. Logged Out: Force show the login screen card, completely hide dashboard elements
     if (authContainer) {
       authContainer.style.setProperty('display', 'block', 'important');
     }
@@ -549,17 +545,14 @@ if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', async () => {
     const emailField = document.getElementById('user-identifier');
     if (!emailField) return;
-    
     const email = emailField.value.trim();
     if (!email) {
       alert('Please enter your email address first.');
       return;
     }
-
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://worldconnect-main.vercel.app/update-password',
     });
-
     if (error) {
       alert('Error: ' + error.message);
     } else {
