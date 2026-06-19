@@ -480,64 +480,35 @@ controlDeck.innerHTML = `
 `;
 document.body.appendChild(controlDeck);
 
-<div class="auth-container"> ```
-
-Because your HTML has `style="display: none;"` on the dashboard now, it will hide on page load. To make sure the script safely finds and shows your login block instead of leaving a blank page or getting stuck, let's update **Section 5** one last time to be completely flexible.
-
----
-
-### 🛠️ The Adaptive Section 5 Code
-
-Replace everything from **`// === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===`** to the very bottom of your `public/js/nodes/system.js` file with this version. 
-
 It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
 
-```javascript
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
-// Setup layout control deck container if it doesn't exist yet
-let controlDeck = document.getElementById('layout-toggle-wrapper');
-if (!controlDeck) {
-  controlDeck = document.createElement('div');
-  controlDeck.id = 'layout-toggle-wrapper';
-  controlDeck.style = "position: fixed; bottom: 20px; right: 20px; display: none; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
-  controlDeck.innerHTML = `
-      <div style="font-weight: bold; margin-bottom: 8px; color: #38bdf8; font-size: 0.8rem; letter-spacing: 0.5px;">⚙️ LAYOUT TOGGLE</div>
-      <button id="toggle-admin-btn" style="background: #0284c7; color: white; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 6px; display: block;">SHOW FULL ADMIN (45 NODES)</button>
-      <button id="toggle-user-btn" style="background: #334155; color: #cbd5e1; border: none; padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; display: block;">SHOW STANDARD USER VIEW</button>
-  `;
-  document.body.appendChild(controlDeck);
-}
-
 supabase.auth.onAuthStateChange((event, session) => {
-  // Flexible selector: finds the login container whether it uses id="auth-container" or class="auth-container"
-  const authContainer = document.getElementById('auth-container') || document.querySelector('.auth-container') || document.querySelector('[class*="auth"]');
+  const authContainer = document.getElementById('auth-container') || document.querySelector('.auth-container');
   const mainDashboard = document.getElementById('main-dashboard');
   const workspaceContainer = document.getElementById('workspace-container');
   const sidebarNavigation = document.getElementById('sidebar');
+  const controlDeckElement = document.getElementById('layout-toggle-wrapper');
 
   if (session) {
-    // 1. User logged in: Hide the login block, show the workspace
-    if (authContainer) authContainer.style.display = 'none';
-    if (mainDashboard) mainDashboard.style.display = 'block';
+    // 1. Logged In: Reveal workspace, tuck away auth portal panels
+    if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
+    if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
     if (workspaceContainer) workspaceContainer.style.display = 'block';
     if (sidebarNavigation) sidebarNavigation.style.display = 'block';
-    if (controlDeck) controlDeck.style.display = 'block';
+    if (controlDeckElement) controlDeckElement.style.display = 'block';
 
-    // Bind sidebar clicks
     if (!window.navigationBound) {
       console.log("[System Core] Binding navigation pipelines...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-      
       sidebarButtons.forEach(btn => {
         btn.style.cursor = "pointer";
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           let name = this.innerText.trim().split('\n')[0];
           let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-          
           sidebarButtons.forEach(b => b.classList.remove('active'));
           this.classList.add('active');
-          
           if (typeof window.handleSidebarPipelineInterception === 'function') {
             window.handleSidebarPipelineInterception(name, id);
           }
@@ -547,12 +518,16 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. No session / Logged out: Show login block, hide workspace elements safely
-    if (authContainer) authContainer.style.display = 'block';
-    if (mainDashboard) mainDashboard.style.display = 'none';
+    // 2. Logged Out: Force show auth panel container, shield core app layers
+    if (authContainer) {
+      authContainer.style.setProperty('display', 'block', 'important');
+    }
+    if (mainDashboard) {
+      mainDashboard.style.setProperty('display', 'none', 'important');
+    }
     if (workspaceContainer) workspaceContainer.style.display = 'none';
     if (sidebarNavigation) sidebarNavigation.style.display = 'none';
-    if (controlDeck) controlDeck.style.display = 'none';
+    if (controlDeckElement) controlDeckElement.style.display = 'none';
     
     window.navigationBound = false;
   }
@@ -564,17 +539,14 @@ if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', async () => {
     const emailField = document.getElementById('user-identifier');
     if (!emailField) return;
-    
     const email = emailField.value.trim();
     if (!email) {
       alert('Please enter your email address first.');
       return;
     }
-
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://worldconnect-main.vercel.app/update-password',
     });
-
     if (error) {
       alert('Error: ' + error.message);
     } else {
