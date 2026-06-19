@@ -472,19 +472,21 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
 supabase.auth.onAuthStateChange((event, session) => {
   const authContainer = document.getElementById('auth-container');
   
-  // These match your EXACT HTML structure IDs perfectly now
+  // Explicitly mapping all your core layout frameworks
   const mainDashboard = document.getElementById('main-dashboard');
   const workspaceContainer = document.getElementById('workspace-container');
   const sidebarNavigation = document.getElementById('sidebar');
+  const layoutToggleWrapper = document.getElementById('layout-toggle-wrapper') || document.querySelector('.layout-toggle-container');
 
   if (session) {
-    // 1. Authenticated User: Hide login card, reveal the entire application shell layout
+    // 1. Authenticated Access: Reveal your operational maps and user controls
     if (authContainer) authContainer.style.display = 'none';
     if (mainDashboard) mainDashboard.style.display = 'block';
     if (workspaceContainer) workspaceContainer.style.display = 'block';
     if (sidebarNavigation) sidebarNavigation.style.display = 'block';
+    if (layoutToggleWrapper) layoutToggleWrapper.style.display = 'block'; // Turn it on safely here
 
-    // Initialize sidebar navigation pipelines exactly once per authenticated runtime
+    // Bind sidebar navigation pathways exactly once per runtime context
     if (!window.navigationBound) {
       console.log("[System Core] Binding navigation pipelines to sidebar lists...");
       const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
@@ -494,7 +496,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           
-          let name = this.innerText.trim().split('\n')[0]; // Strip out badges cleanly
+          let name = this.innerText.trim().split('\n')[0];
           let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
           
           sidebarButtons.forEach(b => b.classList.remove('active'));
@@ -506,7 +508,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         });
       });
 
-      // Bind text input streams
+      // Intercept execution pathways for main prompt areas
       const aiInputField = document.querySelector('.chat-input-field') || document.getElementById('aiPromptInput') || document.getElementById('ai-user-input');
       if (aiInputField) {
         aiInputField.addEventListener('keydown', (e) => {
@@ -517,7 +519,6 @@ supabase.auth.onAuthStateChange((event, session) => {
             }
           }
         });
-        console.log("[System Deck] Text stream enter-key interceptor active.");
       }
 
       console.log("[System Sync] Core infrastructure channels cleanly generated and ready.");
@@ -525,71 +526,13 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 
   } else {
-    // 2. Unauthenticated Guest: Block the viewport with the auth panel, keep dashboard invisible
+    // 2. Unauthenticated Gate: Fully secure ecosystem structures from view instantly
     if (authContainer) authContainer.style.display = 'block';
     if (mainDashboard) mainDashboard.style.display = 'none';
     if (workspaceContainer) workspaceContainer.style.display = 'none';
     if (sidebarNavigation) sidebarNavigation.style.display = 'none';
+    if (layoutToggleWrapper) layoutToggleWrapper.style.display = 'none'; // Lock out toggle panel layout completely
     
     window.navigationBound = false;
   }
 });
-
-// === 6. SUBSCRIPTION INFRASTRUCTURE MANAGEMENT ===
-async function handleSubscription() {
-  const emailInput = document.getElementById('subscriberEmail');
-  const messageText = document.getElementById('subscriptionMessage');
-  
-  if (!emailInput || !messageText) return;
-  const email = emailInput.value.trim();
-  if (!email) return;
-
-  try {
-    const response = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-
-    const result = await response.json();
-    messageText.style.display = 'block';
-
-    if (response.ok) {
-      messageText.style.color = 'green';
-      messageText.innerText = result.message;
-      emailInput.value = ''; 
-    } else {
-      messageText.style.color = 'red';
-      messageText.innerText = result.error;
-    }
-  } catch (error) {
-    messageText.style.display = 'block';
-    messageText.style.color = 'red';
-    messageText.innerText = 'Network error. Please try again.';
-  }
-}
-
-// === 7. SECURE FORGOT PASSWORD ACTION ===
-const forgotPasswordBtn = document.getElementById('forgot-password-btn');
-if (forgotPasswordBtn) {
-  forgotPasswordBtn.addEventListener('click', async () => {
-    const emailField = document.getElementById('user-identifier');
-    if (!emailField) return;
-    
-    const email = emailField.value.trim();
-    if (!email) {
-      alert('Please enter your email address first.');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
-    });
-
-    if (error) {
-      alert('Error: ' + error.message);
-    } else {
-      alert('Password reset link sent to your email!');
-    }
-  });
-}
