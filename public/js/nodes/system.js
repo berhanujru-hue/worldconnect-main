@@ -486,8 +486,12 @@ It uses fallback checks so that whether your login element uses a `class` or an 
 (function() {
   console.log("[System Core] Initializing independent Auth Gating Layer...");
 
+  // Securely find the correct database client instance regardless of code capitalization
+  const databaseClient = window.supabase || window.SUPABASE;
+
   function handleLayoutVisibility(session) {
-    const authContainer = document.getElementById('auth-container');
+    // Flexible structural selectors: checks custom IDs first, falls back gracefully to template wrappers
+    const authContainer = document.getElementById('auth-container') || document.querySelector('.app-shell') || document.querySelector('.auth-container');
     const mainDashboard = document.getElementById('main-dashboard');
     const workspaceContainer = document.getElementById('workspace-container');
     const sidebarNavigation = document.getElementById('sidebar');
@@ -502,6 +506,7 @@ It uses fallback checks so that whether your login element uses a `class` or an 
       if (controlDeckElement) controlDeckElement.style.display = 'block';
 
       if (!window.navigationBound) {
+        console.log("[System Core] Binding navigation pipelines to sidebar lists...");
         const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
         sidebarButtons.forEach(btn => {
           btn.style.cursor = "pointer";
@@ -529,31 +534,39 @@ It uses fallback checks so that whether your login element uses a `class` or an 
     }
   }
 
-  // Ensure execution occurs even if preceding scripts run into dead ends
+  // Safe run context to block external exceptions from pausing execution flow
   try {
-    if (window.supabase) {
+    if (databaseClient && databaseClient.auth) {
       // Run immediate initial check on load
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      databaseClient.auth.getSession().then(({ data: { session } }) => {
         handleLayoutVisibility(session);
-      }).catch(err => console.error("[Auth Gateway] Initial check error:", err));
+      }).catch(err => console.error("[Auth Gateway] Initial storage check error:", err));
 
-      // Listen for runtime status switches
-      supabase.auth.onAuthStateChange((event, session) => {
+      // Listen for runtime status updates (logins, sign-outs, cookie refreshes)
+      databaseClient.auth.onAuthStateChange((event, session) => {
         console.log("[Auth Gateway] State update triggered:", event);
         handleLayoutVisibility(session);
       });
     } else {
-      console.error("[Auth Gateway] Fatal: Supabase instance variable not globally bound.");
+      console.warn("[Auth Gateway] Warning: Supabase client reference unavailable on loading sequence.");
+      handleLayoutVisibility(null);
     }
   } catch (fatalError) {
     console.error("[Auth Gateway] Gating safety catch activated:", fatalError);
+    handleLayoutVisibility(null);
   }
 })();
 
 // === 6. SECURE FORGOT PASSWORD ACTION ===
-const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+const forgotPasswordBtn = document.getElementById('forgot-password-btn') || document.getElementById('forgot-password-trigger');
 if (forgotPasswordBtn) {
   forgotPasswordBtn.addEventListener('click', async () => {
+    const databaseClient = window.supabase || window.SUPABASE;
+    if (!databaseClient) {
+      alert("Database configuration missing.");
+      return;
+    }
+    
     const emailField = document.getElementById('user-identifier');
     if (!emailField) return;
     const email = emailField.value.trim();
@@ -561,9 +574,11 @@ if (forgotPasswordBtn) {
       alert('Please enter your email address first.');
       return;
     }
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    
+    const { data, error } = await databaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: 'https://worldconnect-main.vercel.app/update-password',
     });
+    
     if (error) {
       alert('Error: ' + error.message);
     } else {
