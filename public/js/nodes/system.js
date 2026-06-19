@@ -483,61 +483,72 @@ document.body.appendChild(controlDeck);
 It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
 
 // === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
-supabase.auth.onAuthStateChange((event, session) => {
-  const authContainer = document.getElementById('auth-container');
-  const mainDashboard = document.getElementById('main-dashboard');
-  const workspaceContainer = document.getElementById('workspace-container');
-  const sidebarNavigation = document.getElementById('sidebar');
-  const controlDeckElement = document.getElementById('layout-toggle-wrapper');
+(function() {
+  console.log("[System Core] Initializing independent Auth Gating Layer...");
 
-  if (session) {
-    // 1. Logged In: Hide the auth block, show the main dashboard panels
-    if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
-    if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
-    if (workspaceContainer) workspaceContainer.style.display = 'block';
-    if (sidebarNavigation) sidebarNavigation.style.display = 'block';
-    if (controlDeckElement) controlDeckElement.style.display = 'block';
+  function handleLayoutVisibility(session) {
+    const authContainer = document.getElementById('auth-container');
+    const mainDashboard = document.getElementById('main-dashboard');
+    const workspaceContainer = document.getElementById('workspace-container');
+    const sidebarNavigation = document.getElementById('sidebar');
+    const controlDeckElement = document.getElementById('layout-toggle-wrapper');
 
-    if (!window.navigationBound) {
-      console.log("[System Core] Binding navigation pipelines...");
-      const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-      sidebarButtons.forEach(btn => {
-        btn.style.cursor = "pointer";
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          let name = this.innerText.trim().split('\n')[0];
-          let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-          sidebarButtons.forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          if (typeof window.handleSidebarPipelineInterception === 'function') {
-            window.handleSidebarPipelineInterception(name, id);
-          }
+    if (session) {
+      console.log("[Auth Gateway] Active session confirmed. Rendering dashboard panels.");
+      if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
+      if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
+      if (workspaceContainer) workspaceContainer.style.display = 'block';
+      if (sidebarNavigation) sidebarNavigation.style.display = 'block';
+      if (controlDeckElement) controlDeckElement.style.display = 'block';
+
+      if (!window.navigationBound) {
+        const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
+        sidebarButtons.forEach(btn => {
+          btn.style.cursor = "pointer";
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            let name = this.innerText.trim().split('\n')[0];
+            let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
+            sidebarButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (typeof window.handleSidebarPipelineInterception === 'function') {
+              window.handleSidebarPipelineInterception(name, id);
+            }
+          });
         });
-      });
-      window.navigationBound = true;
+        window.navigationBound = true;
+      }
+    } else {
+      console.log("[Auth Gateway] No session detected. Forcing authentication layout masking.");
+      if (authContainer) authContainer.style.setProperty('display', 'block', 'important');
+      if (mainDashboard) mainDashboard.style.setProperty('display', 'none', 'important');
+      if (workspaceContainer) workspaceContainer.style.setProperty('display', 'none', 'important');
+      if (sidebarNavigation) sidebarNavigation.style.setProperty('display', 'none', 'important');
+      if (controlDeckElement) controlDeckElement.style.setProperty('display', 'none', 'important');
+      window.navigationBound = false;
     }
-
-  } else {
-    // 2. Logged Out: Force show the login screen card, completely hide dashboard elements
-    if (authContainer) {
-      authContainer.style.setProperty('display', 'block', 'important');
-    }
-    if (mainDashboard) {
-      mainDashboard.style.setProperty('display', 'none', 'important');
-    }
-    if (workspaceContainer) {
-      workspaceContainer.style.setProperty('display', 'none', 'important');
-    }
-    if (sidebarNavigation) {
-      sidebarNavigation.style.setProperty('display', 'none', 'important');
-    }
-    if (controlDeckElement) {
-      controlDeckElement.style.setProperty('display', 'none', 'important');
-    }
-    
-    window.navigationBound = false;
   }
-});
+
+  // Ensure execution occurs even if preceding scripts run into dead ends
+  try {
+    if (window.supabase) {
+      // Run immediate initial check on load
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        handleLayoutVisibility(session);
+      }).catch(err => console.error("[Auth Gateway] Initial check error:", err));
+
+      // Listen for runtime status switches
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log("[Auth Gateway] State update triggered:", event);
+        handleLayoutVisibility(session);
+      });
+    } else {
+      console.error("[Auth Gateway] Fatal: Supabase instance variable not globally bound.");
+    }
+  } catch (fatalError) {
+    console.error("[Auth Gateway] Gating safety catch activated:", fatalError);
+  }
+})();
 
 // === 6. SECURE FORGOT PASSWORD ACTION ===
 const forgotPasswordBtn = document.getElementById('forgot-password-btn');
