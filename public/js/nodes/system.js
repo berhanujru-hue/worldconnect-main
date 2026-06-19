@@ -468,7 +468,20 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
     window.fetchSatScan = function() { console.log('[Sat] Telemetry logs scanned.'); };
     window.executeCustomFormAction = function() { console.log('[Form] Fallback records mutated.'); };
 
-    // 🔄 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER
+// 🔄 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER
+supabase.auth.onAuthStateChange((event, session) => {
+  const authContainer = document.getElementById('auth-container');
+  const mainAppLayout = document.querySelector('.app-shell'); 
+
+  if (session) {
+    if (authContainer) authContainer.style.display = 'none';
+    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'block';
+
+    // This is where your original code starts right below it:
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log("[System Deck] DOM fully loaded...");
+
+        // --- NEW AUTO-CLICK BINDING CODE FOR SIDEBAR NODES ---
     window.addEventListener('DOMContentLoaded', () => {
         console.log("[System Deck] DOM fully loaded. Mounting chat stream listeners...");
         
@@ -573,13 +586,36 @@ supabase.auth.onAuthStateChange((event, session) => {
   const mainDashboard = document.getElementById('main-dashboard');
   const authContainer = document.getElementById('auth-container');
 
-  if (session) {
-    // User is logged in: Show the 40-node workspace, keep login screen hidden
-    if (mainDashboard) mainDashboard.style.display = 'block';
+if (session) {
+    // User is logged in: Show the workspace, keep login screen hidden
     if (authContainer) authContainer.style.display = 'none';
+    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'block';
   } else {
-    // No active user session: Hide the dashboard completely, show the login interface
-    if (mainDashboard) mainDashboard.style.display = 'none';
+    // No active user session: Hide the dashboard, show the login interface
     if (authContainer) authContainer.style.display = 'block';
+    if (mainAppLayout && mainAppLayout !== authContainer) mainAppLayout.style.display = 'none';
   }
-});
+}); // Closes supabase.auth.onAuthStateChange
+
+// === 6. SECURE FORGOT PASSWORD ACTION ===
+const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+if (forgotPasswordBtn) {
+  forgotPasswordBtn.addEventListener('click', async () => {
+    const email = document.getElementById('user-identifier').value;
+    
+    if (!email) {
+      alert('Please enter your email address first.');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
+    });
+
+    if (error) {
+      alert('Error: ' + error.message);
+    } else {
+      alert('Password reset link sent to your email!');
+    }
+  }); // Closes addEventListener
+} // Closes if (forgotPasswordBtn)
