@@ -482,168 +482,129 @@ document.body.appendChild(controlDeck);
 
 It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
 
-// === WORLDCONNECT UNIFIED PRODUCTION AUTHENTICATION & GATING ENGINE ===
+// === 5. UNIFIED PORTAL SWITCHING ENGINE ===
 (function() {
-    console.log("[System Core] Initializing independent Auth Gating Layer...");
+  console.log("[System Core] Initializing Master Portal Switching Engine...");
 
-    // Helper function to safely isolate layout visibility switches
-    function setPanelVisibility(elements, visible) {
-        elements.forEach(el => {
-            if (el) {
-                el.style.setProperty('display', visible ? 'block' : 'none', 'important');
+  function toggleMasterLayout(session) {
+    const authPortal = document.getElementById('auth-container');
+    const appWorkspace = document.getElementById('master-application-workspace');
+
+    if (session) {
+      console.log("[Auth Gateway] Session found. Launching application workspace panels.");
+      // Hide login, completely reveal dashboard application wrapper
+      if (authPortal) authPortal.style.setProperty('display', 'none', 'important');
+      if (appWorkspace) appWorkspace.style.setProperty('display', 'block', 'important');
+
+      // Bind sidebar click actions safely
+      if (!window.navigationBound) {
+        const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
+        sidebarButtons.forEach(btn => {
+          btn.style.cursor = "pointer";
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            let name = this.innerText.trim().split('\n')[0];
+            let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
+            sidebarButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (typeof window.handleSidebarPipelineInterception === 'function') {
+              window.handleSidebarPipelineInterception(name, id);
             }
+          };
         });
-    }
-
-    function handleLayoutVisibility(session) {
-        const authContainer = document.getElementById('auth-container');
-        const mainDashboard = document.getElementById('main-dashboard');
-        const workspaceContainer = document.getElementById('workspace-container');
-        const sidebarNavigation = document.getElementById('sidebar');
-        const controlDeckElement = document.getElementById('layout-toggle-wrapper');
-
-        const dashboardPanels = [mainDashboard, workspaceContainer, sidebarNavigation, controlDeckElement];
-
-        if (session) {
-            console.log("[Auth Gateway] Active session confirmed. Rendering dashboard panels.");
-            if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
-            setPanelVisibility(dashboardPanels, true);
-
-            // Bind workspace node click handlers
-            if (!window.navigationBound) {
-                const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-                sidebarButtons.forEach(btn => {
-                    btn.style.cursor = "pointer";
-                    btn.onclick = function(e) {
-                        e.stopPropagation();
-                        let name = this.innerText.trim().split('\n')[0];
-                        let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-                        sidebarButtons.forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-                        if (typeof window.handleSidebarPipelineInterception === 'function') {
-                            window.handleSidebarPipelineInterception(name, id);
-                        }
-                    };
-                });
-                window.navigationBound = true;
-            }
-        } else {
-            console.log("[Auth Gateway] No session detected. Hiding dashboard layout elements.");
-            if (authContainer) authContainer.style.setProperty('display', 'block', 'important');
-            setPanelVisibility(dashboardPanels, false);
-            window.navigationBound = false;
-        }
-    }
-
-    // Polling execution loop to intercept early loading states
-    let searchAttempts = 0;
-    const initializeSystemAuth = () => {
-        const client = window.supabase || window.SUPABASE;
-
-        if (client && client.auth) {
-            console.log("[Auth Gateway] Supabase instance located successfully.");
-            
-            // 1. Establish state change listener subscriptions
-            client.auth.onAuthStateChange((event, session) => {
-                console.log("[Auth Gateway] State update triggered:", event);
-                handleLayoutVisibility(session);
-            });
-
-            // 2. Perform initial background session check
-            client.auth.getSession().then(({ data: { session } }) => {
-                handleLayoutVisibility(session);
-            }).catch(err => console.error("[Auth Gateway] Local token check failure:", err));
-
-            // 3. Connect modern form interactive elements
-            setupFormInteractions(client);
-
-        } else if (searchAttempts < 30) {
-            searchAttempts++;
-            setTimeout(initializeSystemAuth, 100);
-        } else {
-            console.error("[Auth Gateway] Fatal: Global database tracking layer unavailable.");
-        }
-    };
-
-    function setupFormInteractions(client) {
-        const identifierField = document.getElementById('user-identifier');
-        const passwordField = document.getElementById('password');
-        const submitBtn = document.getElementById('submit-btn');
-        const toggleModeText = document.getElementById('toggle-mode');
-        const forgotPasswordBtn = document.getElementById('forgot-password-btn');
-
-        let currentViewMode = 'signup'; // default matching your initial design
-
-        if (!submitBtn) return;
-
-        // Toggle form views smoothly
-        if (toggleModeText) {
-            toggleModeText.onclick = () => {
-                if (currentViewMode === 'signup' || currentViewMode === 'forgot') {
-                    currentViewMode = 'login';
-                    if (passwordField) passwordField.style.display = 'block';
-                    submitBtn.textContent = 'Login';
-                    submitBtn.className = 'btn-login';
-                    toggleModeText.innerHTML = "Don't have an account? <span>Sign Up</span>";
-                } else {
-                    currentViewMode = 'signup';
-                    if (passwordField) passwordField.style.display = 'block';
-                    submitBtn.textContent = 'Sign Up';
-                    submitBtn.className = 'btn-signup';
-                    toggleModeText.innerHTML = "Already have an account? <span>Login</span>";
-                }
-            };
-        }
-
-        if (forgotPasswordBtn) {
-            forgotPasswordBtn.onclick = () => {
-                currentViewMode = 'forgot';
-                if (passwordField) passwordField.style.display = 'none';
-                submitBtn.textContent = 'Send Reset Link';
-                submitBtn.className = 'btn-forgot';
-                if (toggleModeText) toggleModeText.innerHTML = "Back to <span>Login</span>";
-            };
-        }
-
-        // Handle structural form execution pipelines
-        submitBtn.onclick = async (e) => {
-            e.preventDefault();
-            const identifier = identifierField ? identifierField.value.trim() : '';
-            const password = passwordField ? passwordField.value : '';
-
-            if (!identifier) return alert("Please enter your email or phone number!");
-            if (currentViewMode !== 'forgot' && !password) return alert("Please enter your account password!");
-
-            try {
-                const isEmail = identifier.includes('@');
-                const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
-
-                if (currentViewMode === 'login') {
-                    const { data, error } = await client.auth.signInWithPassword(credentials);
-                    if (error) throw error;
-                    alert("Login successful!");
-                } else if (currentViewMode === 'signup') {
-                    const { data, error } = await client.auth.signUp(credentials);
-                    if (error) throw error;
-                    alert("Sign Up successful! Please check your inbox for verification links.");
-                } else if (currentViewMode === 'forgot') {
-                    if (!isEmail) throw new Error("Please enter a valid email address to request a reset link.");
-                    const { error } = await client.auth.resetPasswordForEmail(identifier, {
-                        redirectTo: 'https://worldconnect-main.vercel.app/update-password'
-                    });
-                    if (error) throw error;
-                    alert("Reset token broadcasted successfully! Check your email.");
-                }
-            } catch (err) {
-                alert(err.message);
-            }
-        };
-    }
-
-    // Run setup hook on page mount
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeSystemAuth);
+        window.navigationBound = true;
+      }
     } else {
-        initializeSystemAuth();
+      console.log("[Auth Gateway] No session found. Locking workspace and displaying authentication portal.");
+      // Force display authentication layout screen, mask app workspace completely
+      if (authPortal) authPortal.style.setProperty('display', 'block', 'important');
+      if (appWorkspace) appWorkspace.style.setProperty('display', 'none', 'important');
+      window.navigationBound = false;
+      
+      // Call form interaction setup to ensure event handlers match state
+      setupFormActions();
     }
+  }
+
+  function setupFormActions() {
+    const client = window.supabase || window.SUPABASE;
+    if (!client) return;
+
+    const identifierField = document.getElementById('user-identifier');
+    const passwordField = document.getElementById('password');
+    const submitBtn = document.getElementById('submit-btn');
+    const toggleModeText = document.getElementById('toggle-mode');
+
+    let currentMode = 'signup'; 
+
+    if (toggleModeText && !toggleModeText.dataset.bound) {
+      toggleModeText.dataset.bound = "true";
+      toggleModeText.onclick = () => {
+        if (currentMode === 'signup') {
+          currentMode = 'login';
+          if (submitBtn) { submitBtn.textContent = 'Login'; submitBtn.className = 'btn-login'; }
+          toggleModeText.innerHTML = "Don't have an account? <span>Sign Up</span>";
+        } else {
+          currentMode = 'signup';
+          if (submitBtn) { submitBtn.textContent = 'Sign Up'; submitBtn.className = 'btn-signup'; }
+          toggleModeText.innerHTML = "Already have an account? <span>Login</span>";
+        }
+      };
+    }
+
+    if (submitBtn && !submitBtn.dataset.bound) {
+      submitBtn.dataset.bound = "true";
+      submitBtn.onclick = async (e) => {
+        e.preventDefault();
+        const identifier = identifierField ? identifierField.value.trim() : '';
+        const password = passwordField ? passwordField.value : '';
+
+        if (!identifier || !password) return alert("Please fill out all credentials!");
+
+        try {
+          const isEmail = identifier.includes('@');
+          const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
+
+          if (currentMode === 'login') {
+            const { error } = await client.auth.signInWithPassword(credentials);
+            if (error) throw error;
+            alert("Login successful!");
+          } else {
+            const { error } = await client.auth.signUp(credentials);
+            if (error) throw error;
+            alert("Registration successful! Check your email inbox.");
+          }
+        } catch (err) {
+          alert(err.message);
+        }
+      };
+    }
+  }
+
+  let loopAttempts = 0;
+  const syncWithDatabaseClient = () => {
+    const client = window.supabase || window.SUPABASE;
+    if (client && client.auth) {
+      // Stream state changes
+      client.auth.onAuthStateChange((event, session) => {
+        console.log("[Auth Gateway] Runtime state variation:", event);
+        toggleMasterLayout(session);
+      });
+
+      // Check current login token status
+      client.auth.getSession().then(({ data: { session } }) => {
+        toggleMasterLayout(session);
+      }).catch(err => console.error(err));
+
+    } else if (loopAttempts < 50) {
+      loopAttempts++;
+      setTimeout(syncWithDatabaseClient, 100);
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncWithDatabaseClient);
+  } else {
+    syncWithDatabaseClient();
+  }
 })();
