@@ -482,21 +482,23 @@ document.body.appendChild(controlDeck);
 
 It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
 
-// === 5. UNIFIED PORTAL SWITCHING ENGINE ===
+// === 5. SYSTEM ISOLATION CORE ENGINE ===
 (function() {
-  console.log("[System Core] Initializing Master Portal Switching Engine...");
+  console.log("[System Core] Initializing Isolation Security Framework...");
 
-  function toggleMasterLayout(session) {
-    const authPortal = document.getElementById('auth-container');
-    const appWorkspace = document.getElementById('master-application-workspace');
+  function enforcePortalState(session) {
+    const bodyNode = document.body;
+    if (!bodyNode) return;
 
     if (session) {
-      console.log("[Auth Gateway] Session found. Launching application workspace panels.");
-      // Hide login, completely reveal dashboard application wrapper
+      console.log("[Security Gate] Active session verified. Access granted.");
+      // Adding this class instantly triggers the CSS to layout your full dashboard workspace smoothly
+      bodyNode.classList.add('authenticated-session');
+      
+      const authPortal = document.getElementById('auth-container');
       if (authPortal) authPortal.style.setProperty('display', 'none', 'important');
-      if (appWorkspace) appWorkspace.style.setProperty('display', 'block', 'important');
 
-      // Bind sidebar click actions safely
+      // Setup and bind sidebar actions cleanly
       if (!window.navigationBound) {
         const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
         sidebarButtons.forEach(btn => {
@@ -515,18 +517,17 @@ It uses fallback checks so that whether your login element uses a `class` or an 
         window.navigationBound = true;
       }
     } else {
-      console.log("[Auth Gateway] No session found. Locking workspace and displaying authentication portal.");
-      // Force display authentication layout screen, mask app workspace completely
-      if (authPortal) authPortal.style.setProperty('display', 'block', 'important');
-      if (appWorkspace) appWorkspace.style.setProperty('display', 'none', 'important');
+      console.log("[Security Gate] No credentials detected. Locking platform workspace views.");
+      // Stripping this class forces the CSS to hide everything instantly, blocking inline scripts
+      bodyNode.classList.remove('authenticated-session');
       window.navigationBound = false;
       
-      // Call form interaction setup to ensure event handlers match state
-      setupFormActions();
+      // Keep form listener callbacks active
+      registerFormPipelines();
     }
   }
 
-  function setupFormActions() {
+  function registerFormPipelines() {
     const client = window.supabase || window.SUPABASE;
     if (!client) return;
 
@@ -535,19 +536,19 @@ It uses fallback checks so that whether your login element uses a `class` or an 
     const submitBtn = document.getElementById('submit-btn');
     const toggleModeText = document.getElementById('toggle-mode');
 
-    let currentMode = 'signup'; 
+    let interactiveMode = 'signup';
 
     if (toggleModeText && !toggleModeText.dataset.bound) {
       toggleModeText.dataset.bound = "true";
       toggleModeText.onclick = () => {
-        if (currentMode === 'signup') {
-          currentMode = 'login';
+        if (interactiveMode === 'signup') {
+          interactiveMode = 'login';
           if (submitBtn) { submitBtn.textContent = 'Login'; submitBtn.className = 'btn-login'; }
-          toggleModeText.innerHTML = "Don't have an account? <span>Sign Up</span>";
+          toggleModeText.innerHTML = "Don't have an account? <span style='cursor:pointer;color:#3b82f6;'>Sign Up</span>";
         } else {
-          currentMode = 'signup';
+          interactiveMode = 'signup';
           if (submitBtn) { submitBtn.textContent = 'Sign Up'; submitBtn.className = 'btn-signup'; }
-          toggleModeText.innerHTML = "Already have an account? <span>Login</span>";
+          toggleModeText.innerHTML = "Already have an account? <span style='cursor:pointer;color:#3b82f6;'>Login</span>";
         }
       };
     }
@@ -559,20 +560,20 @@ It uses fallback checks so that whether your login element uses a `class` or an 
         const identifier = identifierField ? identifierField.value.trim() : '';
         const password = passwordField ? passwordField.value : '';
 
-        if (!identifier || !password) return alert("Please fill out all credentials!");
+        if (!identifier || !password) return alert("All credentials fields must be completed.");
 
         try {
           const isEmail = identifier.includes('@');
           const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
 
-          if (currentMode === 'login') {
+          if (interactiveMode === 'login') {
             const { error } = await client.auth.signInWithPassword(credentials);
             if (error) throw error;
-            alert("Login successful!");
+            alert("Login Successful!");
           } else {
             const { error } = await client.auth.signUp(credentials);
             if (error) throw error;
-            alert("Registration successful! Check your email inbox.");
+            alert("Sign Up Successful! Please look for a confirmation email link.");
           }
         } catch (err) {
           alert(err.message);
@@ -581,30 +582,29 @@ It uses fallback checks so that whether your login element uses a `class` or an 
     }
   }
 
-  let loopAttempts = 0;
-  const syncWithDatabaseClient = () => {
+  let handshakeAttempts = 0;
+  const buildDatabaseStream = () => {
     const client = window.supabase || window.SUPABASE;
     if (client && client.auth) {
-      // Stream state changes
-      client.auth.onAuthStateChange((event, session) => {
-        console.log("[Auth Gateway] Runtime state variation:", event);
-        toggleMasterLayout(session);
-      });
-
-      // Check current login token status
+      // Connect immediate session lookup validation hooks
       client.auth.getSession().then(({ data: { session } }) => {
-        toggleMasterLayout(session);
+        enforcePortalState(session);
       }).catch(err => console.error(err));
 
-    } else if (loopAttempts < 50) {
-      loopAttempts++;
-      setTimeout(syncWithDatabaseClient, 100);
+      // Subscribe directly to stream events
+      client.auth.onAuthStateChange((event, session) => {
+        console.log("[Security Gate] Live Event Fired:", event);
+        enforcePortalState(session);
+      });
+    } else if (handshakeAttempts < 60) {
+      handshakeAttempts++;
+      setTimeout(buildDatabaseStream, 100);
     }
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncWithDatabaseClient);
+    document.addEventListener('DOMContentLoaded', buildDatabaseStream);
   } else {
-    syncWithDatabaseClient();
+    buildDatabaseStream();
   }
 })();
