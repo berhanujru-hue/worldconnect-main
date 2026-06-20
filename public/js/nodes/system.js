@@ -469,7 +469,7 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
     window.executeCustomFormAction = function() { console.log('[Form] Fallback records mutated.'); };
 
 // === 4. CONTROL DECK GENERATION LAYER ===
-// This version safely checks if a session is active before showing up
+// Generates a unified control layer that won't duplicate views or break loops
 const controlDeck = document.createElement('div');
 controlDeck.id = 'layout-toggle-wrapper';
 controlDeck.style = "position: fixed; bottom: 20px; right: 20px; display: none; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
@@ -480,13 +480,14 @@ controlDeck.innerHTML = `
 `;
 document.body.appendChild(controlDeck);
 
-// Attach event listeners to make layout switching toggle buttons function perfectly
+// Dynamic toggle handlers to seamlessly bridge user views
 document.getElementById('toggle-admin-btn').onclick = () => {
     const mainDashboard = document.getElementById('main-dashboard');
     const workspaceContainer = document.getElementById('workspace-container');
     if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
     if (workspaceContainer) workspaceContainer.style.setProperty('display', 'grid', 'important');
 };
+
 document.getElementById('toggle-user-btn').onclick = () => {
     const mainDashboard = document.getElementById('main-dashboard');
     const workspaceContainer = document.getElementById('workspace-container');
@@ -508,7 +509,7 @@ document.getElementById('toggle-user-btn').onclick = () => {
       console.log("[Security Gate] Active session verified. Access granted.");
       bodyNode.classList.add('authenticated-session');
       
-      const authPortal = document.getElementById('auth-container');
+      const authPortal = document.getElementById('auth-container') || document.querySelector('.auth-container');
       if (authPortal) authPortal.style.setProperty('display', 'none', 'important');
       if (controlDeckElement) controlDeckElement.style.setProperty('display', 'block', 'important');
 
