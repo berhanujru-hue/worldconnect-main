@@ -508,21 +508,30 @@
         .toggle-text { margin-top: 20px; font-size: 15px; color: #64748b; }
         .toggle-text span { color: var(--primary); font-weight: bold; cursor: pointer; }
 
-  /* Aggressive State Overrides: 
-     Force the layout locked until JavaScript explicitly grants access! 
-  */
+  /* ====== COERCIVE ARCHITECTURAL LOCKDOWN ====== */
+  
+  /* 1. Force ALL dashboard app content hidden completely if the user isn't logged in */
   body:not(.authenticated-session) #master-application-workspace,
   body:not(.authenticated-session) #sidebar,
   body:not(.authenticated-session) #main-dashboard,
   body:not(.authenticated-session) #workspace-container,
   body:not(.authenticated-session) #layout-toggle-wrapper,
+  body:not(.authenticated-session) #dev-view-switcher,
   body:not(.authenticated-session) aside,
   body:not(.authenticated-session) main {
       display: none !important;
   }
 
-  /* Force the Auth Screen visible if the body lacks the session token tag */
+  /* 2. Make sure the clean login box shows up when unauthenticated */
   body:not(.authenticated-session) #auth-container {
+      display: block !important;
+  }
+
+  /* 3. Hide login window smoothly when the session is authorized */
+  body.authenticated-session #auth-container {
+      display: none !important;
+  }
+  body.authenticated-session #master-application-workspace {
       display: block !important;
   }
     
