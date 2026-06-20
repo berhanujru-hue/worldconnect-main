@@ -469,7 +469,7 @@ console.log(`[Module State] Global Localization Loader active. ${SystemLanguage.
     window.executeCustomFormAction = function() { console.log('[Form] Fallback records mutated.'); };
 
 // === 4. CONTROL DECK GENERATION LAYER ===
-// Create and inject the Layout Toggle container directly via JavaScript
+// This version safely checks if a session is active before showing up
 const controlDeck = document.createElement('div');
 controlDeck.id = 'layout-toggle-wrapper';
 controlDeck.style = "position: fixed; bottom: 20px; right: 20px; display: none; background: #1e293b; border: 2px solid #0284c7; padding: 12px; border-radius: 8px; z-index: 999999; font-family: monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.5); color: #f8fafc; min-width: 220px;";
@@ -480,7 +480,19 @@ controlDeck.innerHTML = `
 `;
 document.body.appendChild(controlDeck);
 
-It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
+// Attach event listeners to make layout switching toggle buttons function perfectly
+document.getElementById('toggle-admin-btn').onclick = () => {
+    const mainDashboard = document.getElementById('main-dashboard');
+    const workspaceContainer = document.getElementById('workspace-container');
+    if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
+    if (workspaceContainer) workspaceContainer.style.setProperty('display', 'grid', 'important');
+};
+document.getElementById('toggle-user-btn').onclick = () => {
+    const mainDashboard = document.getElementById('main-dashboard');
+    const workspaceContainer = document.getElementById('workspace-container');
+    if (mainDashboard) mainDashboard.style.setProperty('display', 'none', 'important');
+    if (workspaceContainer) workspaceContainer.style.setProperty('display', 'none', 'important');
+};
 
 // === 5. SYSTEM ISOLATION CORE ENGINE ===
 (function() {
@@ -490,15 +502,16 @@ It uses fallback checks so that whether your login element uses a `class` or an 
     const bodyNode = document.body;
     if (!bodyNode) return;
 
+    const controlDeckElement = document.getElementById('layout-toggle-wrapper');
+
     if (session) {
       console.log("[Security Gate] Active session verified. Access granted.");
-      // Adding this class instantly triggers the CSS to layout your full dashboard workspace smoothly
       bodyNode.classList.add('authenticated-session');
       
       const authPortal = document.getElementById('auth-container');
       if (authPortal) authPortal.style.setProperty('display', 'none', 'important');
+      if (controlDeckElement) controlDeckElement.style.setProperty('display', 'block', 'important');
 
-      // Setup and bind sidebar actions cleanly
       if (!window.navigationBound) {
         const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
         sidebarButtons.forEach(btn => {
@@ -518,11 +531,11 @@ It uses fallback checks so that whether your login element uses a `class` or an 
       }
     } else {
       console.log("[Security Gate] No credentials detected. Locking platform workspace views.");
-      // Stripping this class forces the CSS to hide everything instantly, blocking inline scripts
       bodyNode.classList.remove('authenticated-session');
       window.navigationBound = false;
       
-      // Keep form listener callbacks active
+      if (controlDeckElement) controlDeckElement.style.setProperty('display', 'none', 'important');
+      
       registerFormPipelines();
     }
   }
@@ -586,12 +599,10 @@ It uses fallback checks so that whether your login element uses a `class` or an 
   const buildDatabaseStream = () => {
     const client = window.supabase || window.SUPABASE;
     if (client && client.auth) {
-      // Connect immediate session lookup validation hooks
       client.auth.getSession().then(({ data: { session } }) => {
         enforcePortalState(session);
       }).catch(err => console.error(err));
 
-      // Subscribe directly to stream events
       client.auth.onAuthStateChange((event, session) => {
         console.log("[Security Gate] Live Event Fired:", event);
         enforcePortalState(session);
