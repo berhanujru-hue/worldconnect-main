@@ -482,118 +482,168 @@ document.body.appendChild(controlDeck);
 
 It uses fallback checks so that whether your login element uses a `class` or an `ID`, the script will find it and display it:
 
-// === 5. LIFECYCLE INITIALIZATION LAYER & AUTO-BINDER ===
+// === WORLDCONNECT UNIFIED PRODUCTION AUTHENTICATION & GATING ENGINE ===
 (function() {
-  console.log("[System Core] Initializing independent Auth Gating Layer...");
+    console.log("[System Core] Initializing independent Auth Gating Layer...");
 
-  function handleLayoutVisibility(session) {
-    const authContainer = document.getElementById('auth-container') || document.querySelector('.app-shell') || document.querySelector('.auth-container');
-    const mainDashboard = document.getElementById('main-dashboard');
-    const workspaceContainer = document.getElementById('workspace-container');
-    const sidebarNavigation = document.getElementById('sidebar');
-    const controlDeckElement = document.getElementById('layout-toggle-wrapper');
-
-    if (session) {
-      console.log("[Auth Gateway] Active session confirmed. Rendering dashboard panels.");
-      if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
-      if (mainDashboard) mainDashboard.style.setProperty('display', 'block', 'important');
-      if (workspaceContainer) workspaceContainer.style.display = 'block';
-      if (sidebarNavigation) sidebarNavigation.style.display = 'block';
-      if (controlDeckElement) controlDeckElement.style.display = 'block';
-
-      if (!window.navigationBound) {
-        console.log("[System Core] Binding navigation pipelines to sidebar lists...");
-        const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
-        sidebarButtons.forEach(btn => {
-          btn.style.cursor = "pointer";
-          btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            let name = this.innerText.trim().split('\n')[0];
-            let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
-            sidebarButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            if (typeof window.handleSidebarPipelineInterception === 'function') {
-              window.handleSidebarPipelineInterception(name, id);
+    // Helper function to safely isolate layout visibility switches
+    function setPanelVisibility(elements, visible) {
+        elements.forEach(el => {
+            if (el) {
+                el.style.setProperty('display', visible ? 'block' : 'none', 'important');
             }
-          });
         });
-        window.navigationBound = true;
-      }
-    } else {
-      console.log("[Auth Gateway] No session detected. Forcing authentication layout masking.");
-      if (authContainer) authContainer.style.setProperty('display', 'block', 'important');
-      if (mainDashboard) mainDashboard.style.setProperty('display', 'none', 'important');
-      if (workspaceContainer) workspaceContainer.style.setProperty('display', 'none', 'important');
-      if (sidebarNavigation) sidebarNavigation.style.setProperty('display', 'none', 'important');
-      if (controlDeckElement) controlDeckElement.style.setProperty('display', 'none', 'important');
-      window.navigationBound = false;
     }
-  }
 
-  // New Polling Mechanism: Wait up to 5 seconds for Supabase script tags to load asynchronously
-  let attempts = 0;
-  const initAuth = () => {
-    const databaseClient = window.supabase || window.SUPABASE;
-    
-    if (databaseClient && databaseClient.auth) {
-      console.log("[Auth Gateway] Supabase globally bound successfully.");
-      try {
-        // Run initial check
-        databaseClient.auth.getSession().then(({ data: { session } }) => {
-          handleLayoutVisibility(session);
-        }).catch(err => console.error("[Auth Gateway] Storage check error:", err));
+    function handleLayoutVisibility(session) {
+        const authContainer = document.getElementById('auth-container');
+        const mainDashboard = document.getElementById('main-dashboard');
+        const workspaceContainer = document.getElementById('workspace-container');
+        const sidebarNavigation = document.getElementById('sidebar');
+        const controlDeckElement = document.getElementById('layout-toggle-wrapper');
 
-        // Listen for runtime updates
-        databaseClient.auth.onAuthStateChange((event, session) => {
-          console.log("[Auth Gateway] State update triggered:", event);
-          handleLayoutVisibility(session);
-        });
-      } catch (err) {
-        console.error("[Auth Gateway] Initialization crash averted:", err);
-      }
-    } else if (attempts < 50) {
-      attempts++;
-      setTimeout(initAuth, 100); // Retry every 100ms
-    } else {
-      console.error("[Auth Gateway] Fatal: Supabase script failed to load within timeout window.");
-      handleLayoutVisibility(null); // Fallback to login screen
+        const dashboardPanels = [mainDashboard, workspaceContainer, sidebarNavigation, controlDeckElement];
+
+        if (session) {
+            console.log("[Auth Gateway] Active session confirmed. Rendering dashboard panels.");
+            if (authContainer) authContainer.style.setProperty('display', 'none', 'important');
+            setPanelVisibility(dashboardPanels, true);
+
+            // Bind workspace node click handlers
+            if (!window.navigationBound) {
+                const sidebarButtons = document.querySelectorAll('aside li, .sidebar-node, [data-node-id]');
+                sidebarButtons.forEach(btn => {
+                    btn.style.cursor = "pointer";
+                    btn.onclick = function(e) {
+                        e.stopPropagation();
+                        let name = this.innerText.trim().split('\n')[0];
+                        let id = this.getAttribute('data-node-id') || name.toLowerCase().replace(/\s+/g, '-');
+                        sidebarButtons.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        if (typeof window.handleSidebarPipelineInterception === 'function') {
+                            window.handleSidebarPipelineInterception(name, id);
+                        }
+                    };
+                });
+                window.navigationBound = true;
+            }
+        } else {
+            console.log("[Auth Gateway] No session detected. Hiding dashboard layout elements.");
+            if (authContainer) authContainer.style.setProperty('display', 'block', 'important');
+            setPanelVisibility(dashboardPanels, false);
+            window.navigationBound = false;
+        }
     }
-  };
 
-  // Start polling
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    initAuth();
-  } else {
-    window.addEventListener('DOMContentLoaded', initAuth);
-  }
+    // Polling execution loop to intercept early loading states
+    let searchAttempts = 0;
+    const initializeSystemAuth = () => {
+        const client = window.supabase || window.SUPABASE;
+
+        if (client && client.auth) {
+            console.log("[Auth Gateway] Supabase instance located successfully.");
+            
+            // 1. Establish state change listener subscriptions
+            client.auth.onAuthStateChange((event, session) => {
+                console.log("[Auth Gateway] State update triggered:", event);
+                handleLayoutVisibility(session);
+            });
+
+            // 2. Perform initial background session check
+            client.auth.getSession().then(({ data: { session } }) => {
+                handleLayoutVisibility(session);
+            }).catch(err => console.error("[Auth Gateway] Local token check failure:", err));
+
+            // 3. Connect modern form interactive elements
+            setupFormInteractions(client);
+
+        } else if (searchAttempts < 30) {
+            searchAttempts++;
+            setTimeout(initializeSystemAuth, 100);
+        } else {
+            console.error("[Auth Gateway] Fatal: Global database tracking layer unavailable.");
+        }
+    };
+
+    function setupFormInteractions(client) {
+        const identifierField = document.getElementById('user-identifier');
+        const passwordField = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleModeText = document.getElementById('toggle-mode');
+        const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+
+        let currentViewMode = 'signup'; // default matching your initial design
+
+        if (!submitBtn) return;
+
+        // Toggle form views smoothly
+        if (toggleModeText) {
+            toggleModeText.onclick = () => {
+                if (currentViewMode === 'signup' || currentViewMode === 'forgot') {
+                    currentViewMode = 'login';
+                    if (passwordField) passwordField.style.display = 'block';
+                    submitBtn.textContent = 'Login';
+                    submitBtn.className = 'btn-login';
+                    toggleModeText.innerHTML = "Don't have an account? <span>Sign Up</span>";
+                } else {
+                    currentViewMode = 'signup';
+                    if (passwordField) passwordField.style.display = 'block';
+                    submitBtn.textContent = 'Sign Up';
+                    submitBtn.className = 'btn-signup';
+                    toggleModeText.innerHTML = "Already have an account? <span>Login</span>";
+                }
+            };
+        }
+
+        if (forgotPasswordBtn) {
+            forgotPasswordBtn.onclick = () => {
+                currentViewMode = 'forgot';
+                if (passwordField) passwordField.style.display = 'none';
+                submitBtn.textContent = 'Send Reset Link';
+                submitBtn.className = 'btn-forgot';
+                if (toggleModeText) toggleModeText.innerHTML = "Back to <span>Login</span>";
+            };
+        }
+
+        // Handle structural form execution pipelines
+        submitBtn.onclick = async (e) => {
+            e.preventDefault();
+            const identifier = identifierField ? identifierField.value.trim() : '';
+            const password = passwordField ? passwordField.value : '';
+
+            if (!identifier) return alert("Please enter your email or phone number!");
+            if (currentViewMode !== 'forgot' && !password) return alert("Please enter your account password!");
+
+            try {
+                const isEmail = identifier.includes('@');
+                const credentials = isEmail ? { email: identifier, password } : { phone: identifier, password };
+
+                if (currentViewMode === 'login') {
+                    const { data, error } = await client.auth.signInWithPassword(credentials);
+                    if (error) throw error;
+                    alert("Login successful!");
+                } else if (currentViewMode === 'signup') {
+                    const { data, error } = await client.auth.signUp(credentials);
+                    if (error) throw error;
+                    alert("Sign Up successful! Please check your inbox for verification links.");
+                } else if (currentViewMode === 'forgot') {
+                    if (!isEmail) throw new Error("Please enter a valid email address to request a reset link.");
+                    const { error } = await client.auth.resetPasswordForEmail(identifier, {
+                        redirectTo: 'https://worldconnect-main.vercel.app/update-password'
+                    });
+                    if (error) throw error;
+                    alert("Reset token broadcasted successfully! Check your email.");
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        };
+    }
+
+    // Run setup hook on page mount
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSystemAuth);
+    } else {
+        initializeSystemAuth();
+    }
 })();
-
-// === 6. SECURE FORGOT PASSWORD ACTION ===
-const forgotPasswordBtn = document.getElementById('forgot-password-btn') || document.getElementById('forgot-password-trigger');
-if (forgotPasswordBtn) {
-  forgotPasswordBtn.addEventListener('click', async () => {
-    const databaseClient = window.supabase || window.SUPABASE;
-    if (!databaseClient || !databaseClient.auth) {
-      alert("Database configuration is still loading. Please try again in a moment.");
-      return;
-    }
-    
-    const emailField = document.getElementById('user-identifier');
-    if (!emailField) return;
-    const email = emailField.value.trim();
-    if (!email) {
-      alert('Please enter your email address first.');
-      return;
-    }
-    
-    const { data, error } = await databaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://worldconnect-main.vercel.app/update-password',
-    });
-    
-    if (error) {
-      alert('Error: ' + error.message);
-    } else {
-      alert('Password reset link sent to your email!');
-    }
-  });
-}

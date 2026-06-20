@@ -512,29 +512,31 @@
 </head>
 <body>
 
-  <div id="auth-container" style="display: none;">
-      <div class="app-shell">
-          <div class="container">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png" class="logo" alt="World Logo">
-              
-              <h1>worldconnect</h1>
-              <p class="tagline">Universal AI & Video Super-App</p>
+<div id="auth-container" style="display: block !important;">
+    <div class="app-shell">
+        <div class="container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png" class="logo" alt="World Logo">
+            
+            <h1>worldconnect</h1>
+            <p class="tagline">Universal AI & Video Super-App</p>
 
-              <input type="text" id="user-identifier" placeholder="Email or Phone Number">
-              <input type="password" id="password" placeholder="Password">
+            <div class="auth-form-wrapper">
+                <input type="text" id="user-identifier" placeholder="Email or Phone Number" required autocomplete="username">
+                <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
 
-              <div class="forgot-password-container">
-                  <span id="forgot-password-btn" class="forgot-password-link">Forgot password?</span>
-              </div>
+                <div class="forgot-password-container">
+                    <span id="forgot-password-btn" class="forgot-password-link" style="cursor: pointer;">Forgot password?</span>
+                </div>
 
-              <div class="btn-group">
-                  <button id="submit-btn" class="btn-signup">Sign Up</button>
-              </div>
+                <div class="btn-group">
+                    <button type="button" id="submit-btn" class="btn-signup">Sign Up</button>
+                </div>
+            </div>
 
-              <p class="toggle-text" id="toggle-mode">Already have an account? <span>Login</span></p>
-          </div>
-      </div>
-  </div>
+            <p class="toggle-text" id="toggle-mode">Already have an account? <span style="cursor: pointer; color: #3b82f6; font-weight: bold;">Login</span></p>
+        </div>
+    </div>
+</div>
 
   <div id="main-dashboard" style="display: none;">
       
